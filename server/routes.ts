@@ -26,6 +26,7 @@ import {
 import { sendEmail, getStatusChangeEmailContent } from "./email";
 import { addUserManagementRoutes } from "./user_management_routes";
 import { registerFieldPolicyRoutes } from "./field_policy_routes";
+import { countryScope, requireSuperAdmin } from "./country-middleware";
 
 async function logAudit(
   councilId: string,
@@ -73,6 +74,51 @@ export async function registerRoutes(
 
   app.get("/api/health", (_req, res) => {
     res.status(200).json({ status: "ok", message: "LGIS Server Online" });
+  });
+
+  // ============================================================
+  // COUNTRY (TENANT) MANAGEMENT — System Administrators only
+  // ============================================================
+  app.get("/api/countries", isAuthenticated, async (_req, res) => {
+    try {
+      const list = await storage.getCountries();
+      res.json(list);
+    } catch (err) {
+      console.error("[countries] GET error:", err);
+      res.status(500).json({ success: false, message: "Failed to fetch countries" });
+    }
+  });
+
+  app.get("/api/countries/:countryId", isAuthenticated, requireSuperAdmin, async (req, res) => {
+    try {
+      const c = await storage.getCountryById(req.params.countryId);
+      if (!c) return res.status(404).json({ success: false, message: "Country not found" });
+      res.json(c);
+    } catch (err) {
+      console.error("[countries] GET/:id error:", err);
+      res.status(500).json({ success: false, message: "Failed to fetch country" });
+    }
+  });
+
+  app.post("/api/countries", isAuthenticated, requireSuperAdmin, async (req, res) => {
+    try {
+      const created = await storage.createCountry(req.body);
+      res.status(201).json(created);
+    } catch (err) {
+      console.error("[countries] POST error:", err);
+      res.status(500).json({ success: false, message: "Failed to create country" });
+    }
+  });
+
+  app.patch("/api/countries/:countryId", isAuthenticated, requireSuperAdmin, async (req, res) => {
+    try {
+      const updated = await storage.updateCountry(req.params.countryId, req.body);
+      if (!updated) return res.status(404).json({ success: false, message: "Country not found" });
+      res.json(updated);
+    } catch (err) {
+      console.error("[countries] PATCH error:", err);
+      res.status(500).json({ success: false, message: "Failed to update country" });
+    }
   });
 
   app.post("/api/v1/uploads", upload.single("file"), async (req, res) => {
@@ -386,6 +432,9 @@ export async function registerRoutes(
 
   // Set up authentication routes and session middleware
   setupAuth(app);
+
+  // Apply country (tenant) scoping to all authenticated API routes
+  app.use("/api", countryScope);
 
   // Register Field Policy Routes
   registerFieldPolicyRoutes(app);

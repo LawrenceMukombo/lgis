@@ -12,6 +12,8 @@ import {
   documents, businessVerificationRequests,
   locationLevels, locations, notifications,
   tenantConfig, dynamicLocations, integrationConfigs,
+  countries,
+  type Country, type InsertCountry,
   type Council, type InsertCouncil,
   type Citizen, type InsertCitizen,
   type Business, type InsertBusiness,
@@ -46,11 +48,18 @@ import {
 } from "@shared/schema";
 
 export interface IStorage {
+  // Countries (Tenant Registry)
+  getCountries(): Promise<Country[]>;
+  getCountryById(countryId: string): Promise<Country | undefined>;
+  getCountryByCode(code: string): Promise<Country | undefined>;
+  createCountry(country: InsertCountry): Promise<Country>;
+  updateCountry(countryId: string, updates: Partial<InsertCountry>): Promise<Country | undefined>;
+
   // Tenant Configuration
   getTenantConfig(councilId: string): Promise<any>;
   updateTenantConfig(councilId: string, updates: any): Promise<any>;
   // Councils
-  getCouncils(): Promise<Council[]>;
+  getCouncils(countryId?: string): Promise<Council[]>;
   getCouncilById(councilId: string): Promise<Council | undefined>;
   createCouncil(council: InsertCouncil): Promise<Council>;
   updateCouncil(councilId: string, council: Partial<InsertCouncil>): Promise<Council | undefined>;
@@ -142,7 +151,7 @@ export interface IStorage {
 
   // Users
   getUserById(userId: string): Promise<User | undefined>;
-  getUserWithRole(userId: string): Promise<(User & { roleName: string }) | undefined>;
+  getUserWithRole(userId: string): Promise<(User & { roleName: string; countryId: string | null; countryCode: string | null; countryName: string | null }) | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
 
@@ -219,6 +228,33 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
+  // ============================================================
+  // COUNTRIES (Tenant Registry)
+  // ============================================================
+  async getCountries(): Promise<Country[]> {
+    return await db.select().from(countries).orderBy(asc(countries.name));
+  }
+
+  async getCountryById(countryId: string): Promise<Country | undefined> {
+    const [c] = await db.select().from(countries).where(eq(countries.countryId, countryId));
+    return c;
+  }
+
+  async getCountryByCode(code: string): Promise<Country | undefined> {
+    const [c] = await db.select().from(countries).where(eq(countries.countryCode, code));
+    return c;
+  }
+
+  async createCountry(country: InsertCountry): Promise<Country> {
+    const [created] = await db.insert(countries).values(country).returning();
+    return created;
+  }
+
+  async updateCountry(countryId: string, updates: Partial<InsertCountry>): Promise<Country | undefined> {
+    const [updated] = await db.update(countries).set(updates).where(eq(countries.countryId, countryId)).returning();
+    return updated;
+  }
+
   // Tenant Configuration
   async getTenantConfig(councilId: string): Promise<any> {
     const [config] = await db.select().from(tenantConfig).where(eq(tenantConfig.councilId, councilId));
@@ -243,7 +279,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Councils
-  async getCouncils(): Promise<Council[]> {
+  async getCouncils(countryId?: string): Promise<Council[]> {
+    if (countryId) {
+      return await db.select().from(councils)
+        .where(eq(councils.countryId, countryId))
+        .orderBy(desc(councils.createdAt));
+    }
     return await db.select().from(councils).orderBy(desc(councils.createdAt));
   }
 
@@ -746,7 +787,7 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
-  async getUserWithRole(userId: string): Promise<(User & { roleName: string }) | undefined> {
+  async getUserWithRole(userId: string): Promise<(User & { roleName: string; countryId: string | null; countryCode: string | null; countryName: string | null }) | undefined> {
     const [user] = await db.select().from(users).where(eq(users.userId, userId));
     if (!user) return undefined;
 
@@ -759,7 +800,22 @@ export class DatabaseStorage implements IStorage {
       .limit(1);
 
     const roleName = userRole?.name?.toLowerCase() ?? user.role ?? "user";
-    return { ...user, roleName };
+
+    // Resolve countryId / countryCode from the user's council
+    let countryId: string | null = null;
+    let countryCode: string | null = null;
+    let countryName: string | null = null;
+    if (user.councilId) {
+      const [council] = await db.select().from(councils).where(eq(councils.councilId, user.councilId));
+      if (council?.countryId) {
+        const [country] = await db.select().from(countries).where(eq(countries.countryId, council.countryId));
+        countryId = country?.countryId ?? null;
+        countryCode = country?.countryCode ?? null;
+        countryName = country?.name ?? null;
+      }
+    }
+
+    return { ...user, roleName, countryId, countryCode, countryName };
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {

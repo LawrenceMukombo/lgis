@@ -4,11 +4,30 @@ import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod";
 
 // ================================
+// COUNTRIES (TENANT REGISTRY)
+// ================================
+
+export const countries = pgTable("countries", {
+  countryId: varchar("country_id").primaryKey().default(sql`gen_random_uuid()`),
+  countryCode: char("country_code", { length: 2 }).notNull().unique(), // ISO 3166-1 alpha-2
+  name: text("name").notNull(),
+  currencyCode: char("currency_code", { length: 3 }).notNull(),
+  currencySymbol: text("currency_symbol").notNull().default("$"),
+  timezone: text("timezone").notNull(),
+  locale: text("locale").default("en"),
+  dateFormat: text("date_format").default("DD/MM/YYYY"),
+  flagEmoji: text("flag_emoji"),
+  status: text("status").notNull().default("active"), // active, suspended
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// ================================
 // COUNCILS & ORGANISATION STRUCTURE
 // ================================
 
 export const councils = pgTable("councils", {
   councilId: varchar("council_id").primaryKey().default(sql`gen_random_uuid()`),
+  countryId: varchar("country_id").references(() => countries.countryId, { onDelete: "set null" }), // nullable FK to tenant
   name: text("name").notNull(),
   level: text("level").notNull(), // city, municipal, district, llg
   countryCode: char("country_code", { length: 2 }).notNull().default("PG"),
@@ -967,3 +986,8 @@ export type InsertWorkflowStep = z.infer<typeof insertWorkflowStepSchema>;
 
 export type IntegrationConfig = typeof integrationConfigs.$inferSelect;
 export type InsertIntegrationConfig = z.infer<typeof insertIntegrationConfigSchema>;
+
+// Country / Tenant types
+export const insertCountrySchema = createInsertSchema(countries).omit({ countryId: true, createdAt: true });
+export type Country = typeof countries.$inferSelect;
+export type InsertCountry = z.infer<typeof insertCountrySchema>;
