@@ -13,6 +13,7 @@ import {
 
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { CountrySwitcher } from "./CountrySwitcher";
 
 const NAVIGATION_CATEGORIES = [
   {
@@ -92,8 +93,17 @@ export function Sidebar() {
   const [location] = useLocation();
   const { config } = useTenant();
   const [collapsedCategories, setCollapsedCategories] = useState<Record<string, boolean>>({});
+  const [activeCountryId, setActiveCountryId] = useState<string | null>(null);
 
   const { data: user, isLoading: isUserLoading } = useQuery<any>({ queryKey: ["/api/user"] });
+
+  // Determine if current user is a system admin
+  const roleName = (user?.roleName ?? user?.role ?? "").toLowerCase();
+  const isSuperAdmin =
+    roleName.includes("system") ||
+    roleName.includes("super") ||
+    roleName === "administrator" ||
+    roleName === "admin";
 
   // Fallback to all modules if config is loading or empty to ensure visibility
   const enabledModules = config?.enabledModules?.length > 0 ? config.enabledModules : [
@@ -152,6 +162,17 @@ export function Sidebar() {
         </div>
       </div>
 
+      {/* Country Switcher — System Admins only */}
+      {isSuperAdmin && !isUserLoading && (
+        <div className="px-4 py-2 border-b border-white/10">
+          <p className="text-[9px] font-black uppercase tracking-widest text-white/30 mb-1.5 px-1">Tenant</p>
+          <CountrySwitcher
+            activeCountryId={activeCountryId}
+            onSelect={setActiveCountryId}
+          />
+        </div>
+      )}
+
       <div className="flex-1 overflow-y-auto py-6">
         <nav className="space-y-6 px-3">
           {NAVIGATION_CATEGORIES.map((category) => {
@@ -169,8 +190,8 @@ export function Sidebar() {
 
               // Staff roles — full access (roleName comes from the roles junction table)
               const staffRoles = ["admin", "administrator", "manager", "officer", "inspector"];
-              const roleName = (user.roleName ?? user.role ?? "user").toLowerCase();
-              const isStaff = staffRoles.some(r => roleName.includes(r));
+              const userRoleName = (user.roleName ?? user.role ?? "user").toLowerCase();
+              const isStaff = staffRoles.some(r => userRoleName.includes(r));
 
               if (!isStaff) {
                 // Citizen / public user — restricted view
