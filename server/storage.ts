@@ -1045,12 +1045,6 @@ export class DatabaseStorage implements IStorage {
     return updated;
   }
 
-  // Payments
-  async createPayment(payment: InsertPayment): Promise<Payment> {
-    const [created] = await db.insert(payments).values(payment).returning();
-    return created;
-  }
-
   // Procurement
   async getPurchaseOrders(councilId?: string): Promise<PurchaseOrder[]> {
     if (councilId) return await db.select().from(purchaseOrders).where(eq(purchaseOrders.councilId, councilId)).orderBy(desc(purchaseOrders.createdAt));
