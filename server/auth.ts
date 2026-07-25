@@ -245,8 +245,10 @@ export function setupAuth(app: Express) {
         });
     });
 
-    app.get("/api/user", (req, res) => {
+    app.get("/api/user", async (req, res) => {
         if (!req.isAuthenticated()) return res.sendStatus(401);
-        res.json(req.user);
+        const user = await storage.getUserWithRole((req.user as User).userId);
+        if (!user) return res.sendStatus(401);
+        res.json(user);
     });
 }

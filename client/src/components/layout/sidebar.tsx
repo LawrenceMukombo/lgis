@@ -164,10 +164,16 @@ export function Sidebar() {
               item.id === "payments" ||
               enabledModules.includes(item.id)
             ).filter(item => {
-              // Role-based filtering (Fail Safe: Default to citizen view if loading or user restriction applies)
-              const isRestricted = isUserLoading || !user || user.role === "user";
+              // Show all modules while the user is loading or not yet resolved
+              if (isUserLoading || !user) return false;
 
-              if (isRestricted) {
+              // Staff roles — full access (roleName comes from the roles junction table)
+              const staffRoles = ["admin", "administrator", "manager", "officer", "inspector"];
+              const roleName = (user.roleName ?? user.role ?? "user").toLowerCase();
+              const isStaff = staffRoles.some(r => roleName.includes(r));
+
+              if (!isStaff) {
+                // Citizen / public user — restricted view
                 return citizenAllowedModules.includes(item.id);
               }
               return true;

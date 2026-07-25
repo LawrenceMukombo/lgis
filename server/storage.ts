@@ -142,6 +142,7 @@ export interface IStorage {
 
   // Users
   getUserById(userId: string): Promise<User | undefined>;
+  getUserWithRole(userId: string): Promise<(User & { roleName: string }) | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
 
@@ -743,6 +744,22 @@ export class DatabaseStorage implements IStorage {
   async getUserById(userId: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.userId, userId));
     return user;
+  }
+
+  async getUserWithRole(userId: string): Promise<(User & { roleName: string }) | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.userId, userId));
+    if (!user) return undefined;
+
+    // Resolve the primary role name from the userRoles / roles junction
+    const [userRole] = await db
+      .select({ name: roles.name })
+      .from(userRoles)
+      .innerJoin(roles, eq(userRoles.roleId, roles.roleId))
+      .where(eq(userRoles.userId, userId))
+      .limit(1);
+
+    const roleName = userRole?.name?.toLowerCase() ?? user.role ?? "user";
+    return { ...user, roleName };
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {
