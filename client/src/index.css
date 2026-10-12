@@ -32,12 +32,12 @@
   --color-accent: var(--accent-primary-dimmest);
   --color-accent-foreground: var(--accent-primary-strongest);
 
-  --color-sidebar: #0F0F0F !important;
+  --color-sidebar: #0B0F17 !important;
   --color-sidebar-foreground: #FFFFFF !important;
-  --color-header: #F4C400 !important;
-  --color-header-foreground: #0F0F0F !important;
+  --color-header: #0B0F17 !important;
+  --color-header-foreground: #FFFFFF !important;
   --color-card: var(--card-background, #FFFFFF);
-  --color-card-foreground: #0F0F0F;
+  --color-card-foreground: #0B0F17;
 
   --color-destructive: var(--accent-negative-default);
   --color-destructive-foreground: hsl(var(--destructive-foreground));
@@ -106,29 +106,35 @@
      1. CORE UI COLOR TOKENS (Semantic, No Hard-Coding)
      --------------------------------------------------------------------------- */
 
-  /* 1.1 Brand Colors */
-  --color-brand-primary: #F4C400;
-  /* LGIS Yellow - CTA, highlights */
-  --color-brand-primary-hover: #DDB200;
-  /* Hover state for yellow */
-  --color-brand-primary-active: #C29F00;
+  /* 1.1 Brand Colors - Zambian Flag Palette (Black, Copper Orange, Black, Red) */
+  --color-brand-primary: #EF7D00;
+  /* Zambian Copper Orange - CTA, highlights */
+  --color-brand-primary-hover: #D96800;
+  /* Hover state for copper orange */
+  --color-brand-primary-active: #BF5500;
   /* Active/pressed state */
-  --color-primary: 45 100% 50% !important;
-  --primary: 48 100% 48% !important;
-  /* Gold Buttons */
-  --primary-foreground: 0 0% 0% !important;
-  /* Black text on Gold */
+  --color-brand-red: #DE2010;
+  /* Zambian Freedom Red */
+  --color-brand-black: #0B0F17;
+  /* Zambian Executive Jet Black */
+  --color-brand-green: #198A00;
+  /* Zambian Flora Green */
+  --color-primary: 26 100% 47% !important;
+  --primary: 26 100% 47% !important;
+  /* Copper Orange Buttons */
+  --primary-foreground: 0 0% 100% !important;
+  /* Crisp White text on Copper Orange */
 
   /* 1.2 UI Foundation Colors */
-  --color-ui-black: #0F0F0F;
+  --color-ui-black: #0B0F17;
   /* Sidebar, headers, primary text */
-  --color-ui-black-lighter: #1C1C1C;
+  --color-ui-black-lighter: #1E293B;
   /* Hover state for black backgrounds */
   --color-ui-white: #FFFFFF;
   /* Cards, content surfaces */
-  --color-ui-background: #FFF2B2;
+  --color-ui-background: #F8FAFC;
   /* Page workspace background */
-  --color-ui-border: #E5E5E5;
+  --color-ui-border: #E2E8F0;
   /* Dividers, card borders */
 
   /* 1.3 Text/Foreground Colors */
@@ -198,65 +204,65 @@
   /* Black sidebar */
   --sidebar-foreground: #FFFFFF;
   /* White text */
-  --sidebar-item-active-bg: #F4C400;
-  /* GOLD active background */
-  --sidebar-item-active-text: #0F0F0F;
-  /* Black text on gold */
-  --sidebar-item-hover-bg: #1C1C1C;
+  --sidebar-item-active-bg: #EF7D00;
+  /* Copper Orange active background */
+  --sidebar-item-active-text: #FFFFFF;
+  /* White text on Copper Orange */
+  --sidebar-item-hover-bg: #1E293B;
   /* Subtle hover */
-  --sidebar-item-inactive-text: #FFFFFF;
-  /* White (changed from gray) */
-  --sidebar-icon-active: #F4C400;
-  /* GOLD active icons */
-  --sidebar-icon-inactive: #FFFFFF;
-  /* White inactive icons */
-  --sidebar-border: #F4C400;
-  /* GOLD border accent */
+  --sidebar-item-inactive-text: #CBD5E1;
+  /* Slate-300 */
+  --sidebar-icon-active: #FFFFFF;
+  /* White active icons */
+  --sidebar-icon-inactive: #94A3B8;
+  /* Slate-400 inactive icons */
+  --sidebar-border: #1E293B;
+  /* Executive dark border */
 
-  /* 3.2 Page Headers (GOLD BG, BLACK TEXT) */
-  --header-background: #F4C400;
-  /* GOLD header background */
-  --header-foreground: #0F0F0F;
-  /* Black text on gold */
-  --header-border: #DDB200;
-  /* Darker gold border */
-  --header-utility-icon: #0F0F0F;
-  /* Black icons */
+  /* 3.2 Page Headers (EXECUTIVE BLACK BG, WHITE TEXT, COPPER ACCENT) */
+  --header-background: #0B0F17;
+  /* Executive Black header background */
+  --header-foreground: #FFFFFF;
+  /* White text on header */
+  --header-border: #EF7D00;
+  /* Zambian Copper Orange border */
+  --header-utility-icon: #EF7D00;
+  /* Copper Orange utility icons */
 
-  /* 3.3 Page Workspace (LIGHT YELLOW BG, BLACK TEXT, WHITE CARDS) */
-  --background-root: #FFF2B2;
-  /* Light yellow workspace */
+  /* 3.3 Page Workspace (SLATE BG, BLACK TEXT, WHITE CARDS) */
+  --background-root: #F8FAFC;
+  /* Crisp slate workspace */
   --background-default: #FFFFFF;
   /* White cards/containers */
-  --background-higher: #FFFEF7;
+  --background-higher: #FFFFFF;
   /* Elevated white */
-  --background-highest: #F4C400;
-  /* GOLD for highest elevation */
-  --background-overlay: rgba(15, 15, 15, 0.85);
+  --background-highest: #EF7D00;
+  /* Copper Orange for highest elevation */
+  --background-overlay: rgba(11, 15, 23, 0.85);
   /* Dark overlay */
 
   /* 3.4 Card Components (WHITE CARDS, BLACK TEXT) */
   --card-background: #FFFFFF;
   /* White cards */
-  --card-border: #F4C400;
-  /* GOLD borders */
-  --card-title-text: #0F0F0F;
+  --card-border: #E2E8F0;
+  /* Clean slate borders */
+  --card-title-text: #0B0F17;
   /* Black titles */
-  --card-metadata-text: #6B6B6B;
+  --card-metadata-text: #64748B;
   /* Gray metadata */
-  --card-shadow: 0px 2px 8px rgba(244, 196, 0, 0.15),
-    0px 1px 3px rgba(15, 15, 15, 0.1);
-  /* Gold-tinted shadow */
+  --card-shadow: 0px 2px 8px rgba(11, 15, 23, 0.06),
+    0px 1px 3px rgba(11, 15, 23, 0.04);
+  /* Modern clean shadow */
 
-  /* 3.5 Small Cards & Timelines (BLACK BG, GOLD TEXT) */
-  --small-card-background: #0F0F0F;
+  /* 3.5 Small Cards & Timelines (BLACK BG, COPPER ORANGE TEXT) */
+  --small-card-background: #0B0F17;
   /* Black background */
-  --small-card-text: #F4C400;
-  /* GOLD text */
-  --small-card-border: #F4C400;
-  /* GOLD border */
-  --small-card-icon: #F4C400;
-  /* GOLD icons */
+  --small-card-text: #EF7D00;
+  /* Copper Orange text */
+  --small-card-border: #EF7D00;
+  /* Copper Orange border */
+  --small-card-icon: #EF7D00;
+  /* Copper Orange icons */
 
   /* 3.6 Timeline Components (BLACK BG, GOLD ACCENTS) */
   --timeline-background: #0F0F0F;

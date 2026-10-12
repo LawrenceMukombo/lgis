@@ -2461,11 +2461,11 @@ export async function registerRoutes(
       if (!config) {
         const council = await storage.getCouncilById(councilId);
         const councilName = council?.name || "Lusaka City Council";
-        const shortName = council?.code || (council?.name ? council.name.split(' ').map(w => w[0]).join('') : "LCC");
+        const shortName = council?.name ? council.name.split(' ').map((w: string) => w[0]).join('') : "LCC";
         const currency = council?.currencyCode || "ZMW";
-        const currencySymbol = council?.currencySymbol || "K";
+        const currencySymbol = currency === "ZMW" ? "K" : "K";
         const timezone = council?.timezone || "Africa/Lusaka";
-        const locale = council?.locale || "en-ZM";
+        const locale = council?.countryCode === "ZM" ? "en-ZM" : "en-PG";
 
         return res.json({
           configId: "default",

@@ -249,14 +249,14 @@ export function useTenant() {
 function applyTheme(config: TenantConfig) {
     const root = document.documentElement;
 
-    // AGGRESSIVE BRANDING INJECTION (Locking these in)
-    root.style.setProperty('--sidebar-background', '#0F0F0F');
+    // ZAMBIAN NATIONAL BRANDING INJECTION (Black, Copper Orange, Black, Red)
+    root.style.setProperty('--sidebar-background', '#0B0F17');
     root.style.setProperty('--sidebar-foreground', '#FFFFFF');
-    root.style.setProperty('--header-background', '#F4C400');
-    root.style.setProperty('--header-foreground', '#000000');
-    root.style.setProperty('--color-brand-primary', '#F4C400');
-    root.style.setProperty('--primary', '48 100% 48%');
-    root.style.setProperty('--primary-foreground', '240 6% 6%');
+    root.style.setProperty('--header-background', '#0B0F17');
+    root.style.setProperty('--header-foreground', '#FFFFFF');
+    root.style.setProperty('--color-brand-primary', '#EF7D00');
+    root.style.setProperty('--primary', '26 100% 47%');
+    root.style.setProperty('--primary-foreground', '0 0% 100%');
 
     const applyScale = (baseColor: string, prefix: string) => {
         const { h, s, l } = hexToHsl(baseColor);
@@ -369,86 +369,91 @@ function applyTheme(config: TenantConfig) {
     root.style.setProperty('--destructive-foreground', '0 0% 100%');
 
     // ============================================================================
-    // ENFORCE GOLD, BLACK & WHITE THEME (Always Applied Last to Override Defaults)
+    // ENFORCE ZAMBIAN NATIONAL THEME: BLACK, COPPER ORANGE, BLACK & RED
     // ============================================================================
 
-    // Force gold/black/white color scheme
-    root.style.setProperty('--color-brand-primary', '#F4C400');
-    root.style.setProperty('--color-brand-primary-hover', '#DDB200');
-    root.style.setProperty('--color-brand-primary-active', '#C29F00');
+    // 1. Primary: Zambian Mineral Copper Orange (#EF7D00)
+    root.style.setProperty('--color-brand-primary', '#EF7D00');
+    root.style.setProperty('--color-brand-primary-hover', '#D96800');
+    root.style.setProperty('--color-brand-primary-active', '#BF5500');
 
-    // Override Tailwind's primary colors for buttons
-    // Gold: hsl(48, 100%, 48%) = #F4C400
-    root.style.setProperty('--primary', '48 100% 48%');  // GOLD for buttons
-    root.style.setProperty('--primary-foreground', '240 6% 6%');  // BLACK text (almost black)
+    // Override Tailwind's primary colors for buttons (Vibrant Copper Orange)
+    root.style.setProperty('--primary', '26 100% 47%');
+    root.style.setProperty('--primary-foreground', '0 0% 100%'); // Pure White text
 
-    // Success Color (DARK GREEN)
-    root.style.setProperty('--color-status-success', '#0D7A2C');
-    root.style.setProperty('--accent-positive-default', '#0D7A2C');
+    // 2. Struggle for Freedom Red (#DE2010)
+    root.style.setProperty('--color-brand-red', '#DE2010');
+    root.style.setProperty('--color-status-error', '#DE2010');
+    root.style.setProperty('--accent-negative-default', '#DE2010');
+    root.style.setProperty('--accent-negative-dimmer', '#F87171');
+    root.style.setProperty('--accent-negative-dimmest', '#FEF2F2');
+
+    // 3. Natural Resources Flora Green (#198A00)
+    root.style.setProperty('--color-status-success', '#198A00');
+    root.style.setProperty('--accent-positive-default', '#198A00');
     root.style.setProperty('--accent-positive-dimmer', '#16A34A');
-    root.style.setProperty('--accent-positive-dimmest', '#E6F4EA');
+    root.style.setProperty('--accent-positive-dimmest', '#DCFCE7');
 
-    // Sidebar (Black with White text, Gold active)
-    root.style.setProperty('--header-background', '#0F0F0F');
-    root.style.setProperty('--header-foreground', '#F4C400');
-    root.style.setProperty('--sidebar-background', '#0F0F0F');
-    root.style.setProperty('--sidebar-foreground', '#FFFFFF');
-    root.style.setProperty('--sidebar-item-active-bg', '#F4C400');
-    root.style.setProperty('--sidebar-item-active-text', '#0F0F0F');
-    root.style.setProperty('--sidebar-item-hover-bg', '#1C1C1C');
-    root.style.setProperty('--sidebar-item-inactive-text', '#FFFFFF');
-    root.style.setProperty('--sidebar-icon-active', '#F4C400');
-    root.style.setProperty('--sidebar-icon-inactive', '#FFFFFF');
-    root.style.setProperty('--sidebar-border', '#F4C400');
+    // 4. Executive Jet Black Header & Sidebar (#0B0F17) with Copper & Red Accents
+    root.style.setProperty('--header-background', '#0B0F17');
+    root.style.setProperty('--header-foreground', '#FFFFFF');
+    root.style.setProperty('--header-border', '#EF7D00');
+    root.style.setProperty('--header-utility-icon', '#EF7D00');
 
-    // Page Headers (GOLD background, BLACK text)
-    root.style.setProperty('--header-background', '#F4C400');
-    root.style.setProperty('--header-foreground', '#0F0F0F');
-    root.style.setProperty('--header-border', '#DDB200');
-    root.style.setProperty('--header-utility-icon', '#F4C400');  // GOLD icons in header
+    root.style.setProperty('--sidebar-background', '#0B0F17');
+    root.style.setProperty('--sidebar-foreground', '#F1F5F9');
+    root.style.setProperty('--sidebar-item-active-bg', '#EF7D00');
+    root.style.setProperty('--sidebar-item-active-text', '#FFFFFF');
+    root.style.setProperty('--sidebar-item-hover-bg', '#1E293B');
+    root.style.setProperty('--sidebar-item-inactive-text', '#CBD5E1');
+    root.style.setProperty('--sidebar-icon-active', '#FFFFFF');
+    root.style.setProperty('--sidebar-icon-inactive', '#94A3B8');
+    root.style.setProperty('--sidebar-border', '#1E293B');
 
-    // Page Background (Light Yellow)
-    root.style.setProperty('--background-root', '#FFF2B2');
+    // 5. Clean, authoritative page workspace (Slate & Pure White)
+    root.style.setProperty('--background-root', '#F8FAFC');
     root.style.setProperty('--background-default', '#FFFFFF');
-    root.style.setProperty('--background-higher', '#FFFEF7');
-    root.style.setProperty('--background-highest', '#F4C400');
+    root.style.setProperty('--background-higher', '#FFFFFF');
+    root.style.setProperty('--background-highest', '#EF7D00');
 
-    // Cards (White with GOLD borders)
+    // 6. Cards (Crisp surfaces, slate borders, copper highlights)
     root.style.setProperty('--card-background', '#FFFFFF');
-    root.style.setProperty('--card-border', '#F4C400');
-    root.style.setProperty('--card-title-text', '#0F0F0F');
-    root.style.setProperty('--card-metadata-text', '#6B6B6B');
+    root.style.setProperty('--card-border', '#E2E8F0');
+    root.style.setProperty('--card-title-text', '#0B0F17');
+    root.style.setProperty('--card-metadata-text', '#64748B');
 
-    // Buttons (GOLD TEXT on black backgrounds)
-    root.style.setProperty('--btn-primary-bg', '#F4C400');
-    root.style.setProperty('--btn-primary-text', '#0F0F0F');
-    root.style.setProperty('--btn-primary-hover', '#DDB200');
-    root.style.setProperty('--btn-secondary-bg', '#0F0F0F');
-    root.style.setProperty('--btn-secondary-text', '#F4C400');  // GOLD TEXT
-    root.style.setProperty('--btn-secondary-border', '#F4C400');
-    root.style.setProperty('--btn-success-bg', '#0D7A2C');  // DARK GREEN
+    // 7. Buttons (Copper Orange primary, Executive Black secondary)
+    root.style.setProperty('--btn-primary-bg', '#EF7D00');
+    root.style.setProperty('--btn-primary-text', '#FFFFFF');
+    root.style.setProperty('--btn-primary-hover', '#D96800');
+    root.style.setProperty('--btn-secondary-bg', '#0B0F17');
+    root.style.setProperty('--btn-secondary-text', '#EF7D00');
+    root.style.setProperty('--btn-secondary-border', '#EF7D00');
+    root.style.setProperty('--btn-success-bg', '#198A00');
     root.style.setProperty('--btn-success-text', '#FFFFFF');
-    root.style.setProperty('--btn-success-hover', '#0A5F22');
+    root.style.setProperty('--btn-success-hover', '#146E00');
 
-    // ALL ICONS ARE GOLD
-    root.style.setProperty('--icon-color-default', '#F4C400');  // Default icon color
-    root.style.setProperty('--icon-color-hover', '#DDB200');    // Icon hover
-    root.style.setProperty('--icon-color-active', '#F4C400');   // Active icons
+    // 8. Icons
+    root.style.setProperty('--icon-color-default', '#EF7D00');
+    root.style.setProperty('--icon-color-hover', '#D96800');
+    root.style.setProperty('--icon-color-active', '#EF7D00');
 
-    // Status Badges
-    root.style.setProperty('--badge-approved-bg', '#0D7A2C');  // DARK GREEN
+    // 9. Status Badges
+    root.style.setProperty('--badge-approved-bg', '#198A00');
     root.style.setProperty('--badge-approved-text', '#FFFFFF');
-    root.style.setProperty('--badge-pending-bg', '#F4C400');
-    root.style.setProperty('--badge-pending-text', '#0F0F0F');
-    root.style.setProperty('--badge-draft-bg', '#0F0F0F');
-    root.style.setProperty('--badge-draft-text', '#F4C400');  // GOLD TEXT
+    root.style.setProperty('--badge-pending-bg', '#EF7D00');
+    root.style.setProperty('--badge-pending-text', '#FFFFFF');
+    root.style.setProperty('--badge-draft-bg', '#0B0F17');
+    root.style.setProperty('--badge-draft-text', '#EF7D00');
+    root.style.setProperty('--badge-rejected-bg', '#DE2010');
+    root.style.setProperty('--badge-rejected-text', '#FFFFFF');
 
-    // Accent colors (keep gold theme)
-    root.style.setProperty('--accent-primary-default', '#F4C400');
-    root.style.setProperty('--accent-primary-dimmer', '#FFE066');
-    root.style.setProperty('--accent-primary-dimmest', '#FFF2B2');
-    root.style.setProperty('--accent-primary-stronger', '#DDB200');
-    root.style.setProperty('--accent-primary-strongest', '#C29F00');
+    // 10. Accent Scales
+    root.style.setProperty('--accent-primary-default', '#EF7D00');
+    root.style.setProperty('--accent-primary-dimmer', '#FB923C');
+    root.style.setProperty('--accent-primary-dimmest', '#FFF7ED');
+    root.style.setProperty('--accent-primary-stronger', '#D96800');
+    root.style.setProperty('--accent-primary-strongest', '#BF5500');
 }
 
 function applyFavicon(config: TenantConfig) {
