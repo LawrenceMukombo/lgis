@@ -25,11 +25,11 @@ export default function DocumentsPage() {
     ];
 
     const files = [
-        { id: 1, name: "NCDC_Bylaws_2025.pdf", type: "pdf", size: "4.2 MB", date: "Jan 10, 2026", owner: "Registry" },
-        { id: 2, name: "License_Application_V3.docx", type: "doc", size: "125 KB", date: "Jan 12, 2026", owner: "Licensing" },
-        { id: 3, name: "Site_Plan_Template.dwg", type: "cad", size: "12.5 MB", date: "Jan 15, 2026", owner: "Planning" },
-        { id: 4, name: "Staff_Handbook_2026.pdf", type: "pdf", size: "2.1 MB", date: "Jan 05, 2026", owner: "HR" },
-        { id: 5, name: "Budget_Forecast_Q1.xlsx", type: "xls", size: "890 KB", date: "Jan 20, 2026", owner: "Finance" },
+        { id: 1, name: "Lusaka_City_Council_Bylaws_2026.pdf", type: "pdf", size: "4.2 MB", date: "Jan 10, 2026", owner: "Legal & Registry" },
+        { id: 2, name: "Trading_License_Application_Form.docx", type: "doc", size: "125 KB", date: "Jan 12, 2026", owner: "Licensing" },
+        { id: 3, name: "Lusaka_Master_Plan_Zoning.dwg", type: "cad", size: "12.5 MB", date: "Jan 15, 2026", owner: "Planning" },
+        { id: 4, name: "Council_Staff_Handbook_2026.pdf", type: "pdf", size: "2.1 MB", date: "Jan 05, 2026", owner: "Human Resources" },
+        { id: 5, name: "Municipal_Budget_Forecast_2026.xlsx", type: "xls", size: "890 KB", date: "Jan 20, 2026", owner: "Finance" },
     ];
 
     const getIcon = (type: string) => {

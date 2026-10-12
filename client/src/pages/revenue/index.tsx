@@ -20,6 +20,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { ManualPaymentModal } from "@/components/finance/ManualPaymentModal";
 import { OnlinePaymentModal } from "@/components/finance/OnlinePaymentModal";
 import { useState, useMemo } from "react";
+import { useOrganization } from "@/contexts/organization-context";
 
 const COLORS = [
   "var(--accent-primary-default)",
@@ -30,11 +31,13 @@ const COLORS = [
 ];
 
 export default function RevenuePage() {
+  const { currentOrganization } = useOrganization();
+  const currencyCode = currentOrganization?.currencyCode || "ZMW";
+
   // Fetch real payments data
   const { data: payments = [], isLoading: loadingPayments } = useQuery({
-    queryKey: ["/api/v1/payments"],
+    queryKey: ["/api/v1/payments", currentOrganization?.councilId],
     queryFn: async () => {
-      // Use endpoint that handles councilId on backend
       const res = await apiRequest("GET", `/api/v1/payments`);
       return res.json();
     }
@@ -42,7 +45,7 @@ export default function RevenuePage() {
 
   // Fetch real invoices data
   const { data: invoices = [], isLoading: loadingInvoices } = useQuery({
-    queryKey: ["/api/v1/invoices"],
+    queryKey: ["/api/v1/invoices", currentOrganization?.councilId],
     queryFn: async () => {
       const res = await apiRequest("GET", "/api/v1/invoices");
       return res.json();
@@ -179,7 +182,7 @@ export default function RevenuePage() {
       <div className="gov-page-header">
         <div>
           <h1 className="text-3xl font-black tracking-tight uppercase">Revenue Management</h1>
-          <p className="flex items-center mt-2 text-sm opacity-90">Financial overview, billing, and automated collections for the commission.</p>
+          <p className="flex items-center mt-2 text-sm opacity-90">Financial overview, billing, and automated collections for {currentOrganization?.name || "the council"}.</p>
         </div>
         <div className="flex gap-2">
           <Button onClick={() => setShowPaymentModal(true)} className="font-bold border-none shadow-md hover:bg-positive/90 bg-positive text-white mr-2">
@@ -190,12 +193,12 @@ export default function RevenuePage() {
             <CreditCard className="mr-2 h-4 w-4" />
             Pay Online
           </Button>
-          <Button variant="outline" className="border-2 font-bold hover:bg-black/90 bg-black text-[#F4C400] border-[#F4C400]">
-            <Calendar className="mr-2 h-4 w-4 text-[#F4C400]" />
-            Fiscal Year 2026
+          <Button variant="outline" className="border-2 font-bold hover:bg-black/90 bg-black text-[#EF7D00] border-[#EF7D00]">
+            <Calendar className="mr-2 h-4 w-4 text-[#EF7D00]" />
+            Fiscal Year {new Date().getFullYear()}
           </Button>
-          <Button className="font-bold border-none shadow-md hover:bg-black/90 bg-black text-[#F4C400]">
-            <Download className="mr-2 h-4 w-4 text-[#F4C400]" />
+          <Button className="font-bold border-none shadow-md hover:bg-[#D46C00] bg-[#EF7D00] text-white">
+            <Download className="mr-2 h-4 w-4 text-white" />
             Export Report
           </Button>
         </div>
@@ -215,13 +218,13 @@ export default function RevenuePage() {
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between mb-2">
                   <p className="text-sm font-bold text-black uppercase">Total Collected</p>
-                  <DollarSign className="h-4 w-4 text-[#F4C400]" />
+                  <DollarSign className="h-4 w-4 text-[#EF7D00]" />
                 </div>
-                <div className="text-2xl font-black text-[#F4C400]">
-                  PGK {isLoading ? '...' : formatCurrency(analytics.totalCollected)}
+                <div className="text-2xl font-black text-[#EF7D00]">
+                  {currencyCode} {isLoading ? '...' : formatCurrency(analytics.totalCollected)}
                 </div>
                 <p className="text-xs text-black font-medium flex items-center mt-1">
-                  <TrendingUp className="h-3 w-3 mr-1 text-[#F4C400]" /> Real-time data
+                  <TrendingUp className="h-3 w-3 mr-1 text-[#EF7D00]" /> Real-time data
                 </p>
               </CardContent>
             </Card>
@@ -229,10 +232,10 @@ export default function RevenuePage() {
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between mb-2">
                   <p className="text-sm font-bold text-black uppercase">Outstanding</p>
-                  <FileText className="h-4 w-4 text-[#F4C400]" />
+                  <FileText className="h-4 w-4 text-[#EF7D00]" />
                 </div>
-                <div className="text-2xl font-black text-[#F4C400]">
-                  PGK {isLoading ? '...' : formatCurrency(analytics.outstanding)}
+                <div className="text-2xl font-black text-[#EF7D00]">
+                  {currencyCode} {isLoading ? '...' : formatCurrency(analytics.outstanding)}
                 </div>
                 <p className="text-xs text-black font-medium mt-1">Est. arrears</p>
               </CardContent>
@@ -241,10 +244,10 @@ export default function RevenuePage() {
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between mb-2">
                   <p className="text-sm font-bold text-black uppercase">Daily Average</p>
-                  <Activity className="h-4 w-4 text-[#F4C400]" />
+                  <Activity className="h-4 w-4 text-[#EF7D00]" />
                 </div>
-                <div className="text-2xl font-black text-[#F4C400]">
-                  PGK {isLoading ? '...' : formatCurrency(analytics.dailyAverage)}
+                <div className="text-2xl font-black text-[#EF7D00]">
+                  {currencyCode} {isLoading ? '...' : formatCurrency(analytics.dailyAverage)}
                 </div>
                 <p className="text-xs text-black font-medium mt-1">Based on last 30 days</p>
               </CardContent>
@@ -278,7 +281,7 @@ export default function RevenuePage() {
                       <XAxis dataKey="name" stroke="var(--foreground-dimmer)" fontSize={12} tickLine={false} axisLine={false} />
                       <YAxis stroke="var(--foreground-dimmer)" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `K${value / 1000}k`} />
                       <Tooltip
-                        formatter={(value) => `PGK ${value.toLocaleString()}`}
+                        formatter={(value) => `${currencyCode} ${value.toLocaleString()}`}
                         contentStyle={{ borderRadius: "8px", border: "1px solid var(--outline-dimmer)", backgroundColor: "var(--background-default)", color: "var(--foreground-default)" }}
                       />
                       <Bar dataKey="amount" fill="var(--accent-primary-default)" radius={[4, 4, 0, 0]} />
@@ -310,7 +313,7 @@ export default function RevenuePage() {
                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                         ))}
                       </Pie>
-                      <Tooltip formatter={(value) => `PGK ${value.toLocaleString()}`} />
+                      <Tooltip formatter={(value) => `${currencyCode} ${value.toLocaleString()}`} />
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
@@ -409,7 +412,7 @@ export default function RevenuePage() {
                     <TableHead>Payer</TableHead>
                     <TableHead>Type</TableHead>
                     <TableHead>Method</TableHead>
-                    <TableHead>Amount (PGK)</TableHead>
+                    <TableHead>Amount ({currencyCode})</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="text-right">Action</TableHead>
                   </TableRow>

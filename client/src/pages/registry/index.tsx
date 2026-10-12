@@ -36,6 +36,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { PROVINCES, PROVINCES_AND_DISTRICTS } from "@/lib/location-data";
 import { BusinessLocationMap } from "@/components/BusinessLocationMap";
+import { useOrganization } from "@/contexts/organization-context";
 
 interface Citizen {
   citizenId: string;
@@ -145,7 +146,7 @@ interface BusinessFormData {
 const initialCitizenForm: CitizenFormData = {
   firstName: "", lastName: "", nationalId: "", dob: "",
   phone: "", email: "", address: "", section: "", lot: "", block: "", suburb: "",
-  village: "", district: "", province: "", nationality: "PNG"
+  village: "", district: "", province: "", nationality: "Zambia"
 };
 
 const initialBusinessForm: BusinessFormData = {
@@ -196,17 +197,34 @@ export default function RegistryPage() {
   const [editBusinessForm, setEditBusinessForm] = useState<BusinessFormData>(initialBusinessForm);
   const [editAssetForm, setEditAssetForm] = useState<AssetFormData>(initialAssetForm);
   const [showNewAssetModal, setShowNewAssetModal] = useState(false);
+  const { currentOrganization } = useOrganization();
+  const activeCouncilId = currentOrganization?.councilId;
 
   const { data: citizens = [], isLoading: loadingCitizens } = useQuery<Citizen[]>({
-    queryKey: ["/api/citizens"],
+    queryKey: ["/api/citizens", activeCouncilId],
+    queryFn: async () => {
+      const url = activeCouncilId ? `/api/citizens?councilId=${activeCouncilId}` : "/api/citizens";
+      const res = await apiRequest("GET", url);
+      return res.json();
+    }
   });
 
   const { data: businesses = [], isLoading: loadingBusinesses } = useQuery<Business[]>({
-    queryKey: ["/api/businesses"],
+    queryKey: ["/api/businesses", activeCouncilId],
+    queryFn: async () => {
+      const url = activeCouncilId ? `/api/businesses?councilId=${activeCouncilId}` : "/api/businesses";
+      const res = await apiRequest("GET", url);
+      return res.json();
+    }
   });
 
   const { data: assets = [], isLoading: loadingAssets } = useQuery<Asset[]>({
-    queryKey: ["/api/assets"],
+    queryKey: ["/api/assets", activeCouncilId],
+    queryFn: async () => {
+      const url = activeCouncilId ? `/api/assets?councilId=${activeCouncilId}` : "/api/assets";
+      const res = await apiRequest("GET", url);
+      return res.json();
+    }
   });
 
   interface Council {
@@ -218,7 +236,7 @@ export default function RegistryPage() {
     queryKey: ["/api/councils"],
   });
 
-  const defaultCouncilId = councils.length > 0 ? councils[0].councilId : "";
+  const defaultCouncilId = activeCouncilId || (councils.length > 0 ? councils[0].councilId : "");
 
   const createCitizenMutation = useMutation({
     mutationFn: async (data: CitizenFormData) => {
@@ -566,7 +584,7 @@ export default function RegistryPage() {
       <div className="gov-page-header">
         <div>
           <h1 className="text-3xl font-bold uppercase tracking-tight">Registry</h1>
-          <p className="flex items-center mt-2 text-sm opacity-90">Manage citizen and business records across the National Capital District.</p>
+          <p className="flex items-center mt-2 text-sm opacity-90">Manage citizen and business records across {currentOrganization?.name || "the council"}.</p>
         </div>
         <div className="flex items-center space-x-2">
           <Button

@@ -17,10 +17,10 @@ export default function BuildingControlPage() {
     ];
 
     const projects = [
-        { id: "BP-2025-882", project: "Skyview Apartments", location: "Waigani Dr", type: "Residential", status: "Construction", progress: 65 },
-        { id: "BP-2025-901", project: "NCDC Annex", location: "City Hall", type: "Commercial", status: "Inspection", progress: 90 },
-        { id: "BP-2026-005", project: "Koki Markets Upgrade", location: "Koki", type: "Public", status: "Planning", progress: 15 },
-        { id: "BP-2026-012", project: "Warehouse 4B", location: "Gordons", type: "Industrial", status: "Pending", progress: 0 },
+        { id: "BP-2026-001", project: "Woodlands Heights Residential Complex", location: "Woodlands", type: "Residential", status: "Construction", progress: 65 },
+        { id: "BP-2026-002", project: "Civic Centre Administrative Annex", location: "Independence Ave", type: "Commercial", status: "Inspection", progress: 90 },
+        { id: "BP-2026-003", project: "Soweto Market Cold Storage Upgrade", location: "Lumumba Rd", type: "Public", status: "Planning", progress: 15 },
+        { id: "BP-2026-004", project: "Nampundwe Logistics Warehouse 4B", location: "Heavy Industrial", type: "Industrial", status: "Pending", progress: 0 },
     ];
 
     return (

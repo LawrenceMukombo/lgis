@@ -31,10 +31,10 @@ export default function PlanningPage() {
     ];
 
     const applications = [
-        { id: "PA-2025-042", project: "Harbour City Mix-Use", location: "Konedobu", type: "Rezoning", status: "Under Review", applicant: "PNG Ports" },
-        { id: "PA-2025-055", project: "Subdivision Lot 88", location: "9 Mile", type: "Subdivision", status: "Approved", applicant: "Private" },
-        { id: "PA-2026-001", project: "New Commercial Hub", location: "Waigani", type: "Development", status: "Consultation", applicant: "City Group" },
-        { id: "PA-2026-003", project: "Community Park", location: "Gerehu", type: "Land Use", status: "Pending", applicant: "NCDC" },
+        { id: "PA-2026-001", project: "Trade Kings Industrial Expansion", location: "Heavy Industrial Area", type: "Industrial Development", status: "Approved", applicant: "Trade Kings Limited" },
+        { id: "PA-2026-002", project: "Woodlands Mixed-Use Plaza", location: "Woodlands", type: "Commercial Zoning", status: "Under Review", applicant: "Lusaka Commercial Estates" },
+        { id: "PA-2026-003", project: "Rhodes Park Subdivision Lot 14", location: "Rhodes Park", type: "Subdivision", status: "Approved", applicant: "Kondwani Phiri" },
+        { id: "PA-2026-004", project: "Matero Community Green Park", location: "Matero", type: "Public Land Use", status: "Pending", applicant: "Lusaka City Council" },
     ];
 
     return (

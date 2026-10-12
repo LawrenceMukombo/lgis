@@ -8,11 +8,16 @@ import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 
 import { useLocation } from "wouter";
+import { useOrganization } from "@/contexts/organization-context";
 
 export default function DashboardPage() {
   const [, setLocation] = useLocation();
+  const { currentOrganization } = useOrganization();
+  const currencyCode = currentOrganization?.currencyCode || "ZMW";
+  const councilName = currentOrganization?.name || "Lusaka City Council";
+
   const { data: stats, isLoading: loadingStats } = useQuery({
-    queryKey: ["/api/v1/stats"],
+    queryKey: ["/api/v1/stats", currentOrganization?.councilId],
     queryFn: async () => {
       const res = await apiRequest("GET", "/api/v1/stats");
       return res.json();
@@ -20,9 +25,9 @@ export default function DashboardPage() {
   });
 
   const formatCurrency = (value: number) => {
-    if (value >= 1000000) return `PGK ${(value / 1000000).toFixed(1)}M`;
-    if (value >= 1000) return `PGK ${(value / 1000).toFixed(1)}K`;
-    return `PGK ${value.toLocaleString()}`;
+    if (value >= 1000000) return `${currencyCode} ${(value / 1000000).toFixed(1)}M`;
+    if (value >= 1000) return `${currencyCode} ${(value / 1000).toFixed(1)}K`;
+    return `${currencyCode} ${value.toLocaleString()}`;
   };
 
   const STATS_CARDS = [
@@ -68,18 +73,18 @@ export default function DashboardPage() {
       <div className="flex-1 w-full flex flex-col overflow-hidden max-w-screen-2xl mx-auto p-4 md:p-6 lg:p-8">
         <div className="gov-page-header">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight uppercase">Commission Dashboard</h1>
+            <h1 className="text-3xl font-bold tracking-tight uppercase">{councilName} Dashboard</h1>
             <p className="flex items-center mt-2 text-sm opacity-90">
               <MapPin className="h-4 w-4 mr-1" />
-              National Capital District Overview • FY 2026
+              {councilName} Overview • FY {new Date().getFullYear()}
             </p>
           </div>
           <div className="flex items-center space-x-2">
-            <Button variant="outline" size="sm" className="font-bold border-2 border-[#F4C400] bg-[#0F0F0F] text-[#F4C400] hover:bg-black/80">
+            <Button variant="outline" size="sm" className="font-bold border-2 border-[#EF7D00] bg-[#0F0F0F] text-[#EF7D00] hover:bg-black/80">
               <Calendar className="mr-2 h-4 w-4" />
               Today: {new Date().toLocaleDateString()}
             </Button>
-            <Button size="sm" className="bg-[#F4C400] text-black font-black hover:bg-[#D4A000] shadow-lg">
+            <Button size="sm" className="bg-[#EF7D00] text-white font-bold hover:bg-[#D46C00] shadow-lg">
               Generate Report
             </Button>
           </div>
@@ -128,7 +133,7 @@ export default function DashboardPage() {
           <CardHeader>
             <CardTitle>Revenue Collections</CardTitle>
             <CardDescription>
-              Monthly revenue across all NCDC divisions (PGK).
+              Monthly revenue across all {councilName} divisions ({currencyCode}).
             </CardDescription>
           </CardHeader>
           <CardContent className="pl-2">
@@ -232,7 +237,7 @@ export default function DashboardPage() {
                     </div>
                     <div className="ml-auto flex flex-col items-end">
                       {activity.amount > 0 && (
-                        <span className="text-sm font-bold text-foreground-default">PGK {Number(activity.amount).toLocaleString()}</span>
+                        <span className="text-sm font-bold text-foreground-default">{currencyCode} {Number(activity.amount).toLocaleString()}</span>
                       )}
                       <span className="text-xs text-foreground-dimmer">
                         {new Date(activity.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}

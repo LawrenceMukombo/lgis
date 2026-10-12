@@ -33,7 +33,7 @@ export default function GISPage() {
   const [, setLocation] = useLocation();
 
   // Map center and zoom state
-  const [mapCenter, setMapCenter] = useState<[number, number]>([-9.4438, 147.1803]); // Port Moresby default
+  const [mapCenter, setMapCenter] = useState<[number, number]>([-15.4167, 28.2833]); // Lusaka default
   const [mapZoom, setMapZoom] = useState<number>(12);
 
   // Parse URL parameters on mount and update map
@@ -163,7 +163,7 @@ export default function GISPage() {
       <div className="gov-page-header">
         <div>
           <h2 className="text-3xl font-black tracking-tight uppercase">GIS & Mapping Intelligence</h2>
-          <p className="font-medium opacity-90">Geospatial visualization of NCDC assets, businesses, and licensing activities.</p>
+          <p className="font-medium opacity-90">Geospatial visualization of council assets, businesses, and licensing activities.</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" className="border-gold text-gold font-bold">
