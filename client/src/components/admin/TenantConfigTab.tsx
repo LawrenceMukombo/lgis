@@ -1065,7 +1065,7 @@ export function TenantConfigTab() {
                                                         id={`module-${module.id}`}
                                                         checked={!!formData.enabledModules?.includes(module.id)}
                                                         onCheckedChange={() => toggleModule(module.id)}
-                                                        className="data-[state=checked]:bg-primary"
+                                                        className="data-[state=checked]:bg-[#EF7D00] data-[state=checked]:border-[#EF7D00] data-[state=unchecked]:bg-slate-300"
                                                     />
                                                 </div>
                                             </CardContent>
@@ -1101,7 +1101,7 @@ export function TenantConfigTab() {
                                                         id={`module-${module.id}`}
                                                         checked={!!formData.enabledModules?.includes(module.id)}
                                                         onCheckedChange={() => toggleModule(module.id)}
-                                                        className="data-[state=checked]:bg-negative"
+                                                        className="data-[state=checked]:bg-[#EF7D00] data-[state=checked]:border-[#EF7D00] data-[state=unchecked]:bg-slate-300"
                                                     />
                                                 </div>
                                             </CardContent>
@@ -1138,7 +1138,7 @@ export function TenantConfigTab() {
                                                         id={`module-${module.id}`}
                                                         checked={!!formData.enabledModules?.includes(module.id)}
                                                         onCheckedChange={() => toggleModule(module.id)}
-                                                        className="data-[state=checked]:bg-primary"
+                                                        className="data-[state=checked]:bg-[#EF7D00] data-[state=checked]:border-[#EF7D00] data-[state=unchecked]:bg-slate-300"
                                                     />
                                                 </div>
                                             </CardContent>
@@ -1174,7 +1174,7 @@ export function TenantConfigTab() {
                                                         id={`module-${module.id}`}
                                                         checked={!!formData.enabledModules?.includes(module.id)}
                                                         onCheckedChange={() => toggleModule(module.id)}
-                                                        className="data-[state=checked]:bg-warning"
+                                                        className="data-[state=checked]:bg-[#EF7D00] data-[state=checked]:border-[#EF7D00] data-[state=unchecked]:bg-slate-300"
                                                     />
                                                 </div>
                                             </CardContent>
@@ -1217,7 +1217,7 @@ export function TenantConfigTab() {
                                                         id={`module-${module.id}`}
                                                         checked={!!formData.enabledModules?.includes(module.id)}
                                                         onCheckedChange={() => toggleModule(module.id)}
-                                                        className="data-[state=checked]:bg-primary"
+                                                        className="data-[state=checked]:bg-[#EF7D00] data-[state=checked]:border-[#EF7D00] data-[state=unchecked]:bg-slate-300"
                                                     />
                                                 </div>
                                             </CardContent>
@@ -1253,7 +1253,7 @@ export function TenantConfigTab() {
                                                         id={`module-${module.id}`}
                                                         checked={formData.enabledModules?.includes(module.id)}
                                                         onCheckedChange={() => toggleModule(module.id)}
-                                                        className="data-[state=checked]:bg-primary"
+                                                        className="data-[state=checked]:bg-[#EF7D00] data-[state=checked]:border-[#EF7D00] data-[state=unchecked]:bg-slate-300"
                                                     />
                                                 </div>
                                             </CardContent>

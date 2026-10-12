@@ -98,7 +98,7 @@ export default function IntegrationsPage() {
 
                   <div className="flex items-center gap-6 w-full md:w-auto justify-end">
                     <div className="flex items-center space-x-2">
-                      <Switch checked={integration.status === 'Connected' || integration.status === 'Error'} className="data-[state=checked]:bg-[#F4C400]" />
+                      <Switch checked={integration.status === 'Connected' || integration.status === 'Error'} className="data-[state=checked]:bg-[#EF7D00]" />
                       <span className="text-sm font-bold text-black">Enabled</span>
                     </div>
                     <Button
