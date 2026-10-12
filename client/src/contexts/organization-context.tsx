@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 
 interface Council {
   councilId: string;
+  countryId?: string | null;
   name: string;
   level: string;
   countryCode: string | null;
@@ -24,12 +25,20 @@ interface OrganizationContextType {
   currentOrganization: Council | null;
   setCurrentOrganization: (org: Council) => void;
   organizations: Council[];
+  allOrganizations: Council[];
   isLoading: boolean;
+  selectedCountryId: string | null;
+  setSelectedCountryId: (countryId: string | null) => void;
 }
 
 const OrganizationContext = createContext<OrganizationContextType | undefined>(undefined);
 
 export function OrganizationProvider({ children }: { children: React.ReactNode }) {
+  const [selectedCountryId, setSelectedCountryIdState] = useState<string | null>(() => {
+    if (typeof window === 'undefined') return null;
+    return localStorage.getItem('selectedCountryId') || null;
+  });
+
   const [currentOrganization, setCurrentOrganization] = useState<Council | null>(() => {
     if (typeof window === 'undefined') return null;
     const stored = localStorage.getItem('currentOrganization');
@@ -45,35 +54,56 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
     queryKey: ["/api/councils"],
   });
 
-  const organizations: Council[] = data || [];
+  const allOrganizations: Council[] = data || [];
+
+  const organizations = React.useMemo(() => {
+    if (!selectedCountryId) return allOrganizations;
+    return allOrganizations.filter(o => o.countryId === selectedCountryId);
+  }, [allOrganizations, selectedCountryId]);
+
+  const setSelectedCountryId = (countryId: string | null) => {
+    setSelectedCountryIdState(countryId);
+    if (countryId) {
+      localStorage.setItem('selectedCountryId', countryId);
+      // Auto-switch current organization to the first council in this country if not already in it
+      const countryCouncils = allOrganizations.filter(o => o.countryId === countryId);
+      if (countryCouncils.length > 0 && currentOrganization?.countryId !== countryId) {
+        setCurrentOrganization(countryCouncils[0]);
+      }
+    } else {
+      localStorage.removeItem('selectedCountryId');
+    }
+  };
 
   useEffect(() => {
-    if (organizations.length > 0 && !currentOrganization) {
-      // Load from localStorage or use first organization
+    if (allOrganizations.length > 0 && !currentOrganization) {
       const stored = localStorage.getItem('currentOrganization');
       if (stored) {
         try {
           const parsed = JSON.parse(stored);
           if (parsed && parsed.councilId) {
-            setCurrentOrganization(parsed);
+            const found = allOrganizations.find(o => o.councilId === parsed.councilId);
+            setCurrentOrganization(found || allOrganizations[0]);
           } else {
-            throw new Error("Invalid stored org");
+            setCurrentOrganization(allOrganizations[0]);
           }
         } catch {
-          const ncdc = organizations.find(o => o.councilId === '3c4d4a9f-92a7-4dd2-82fb-ceff90c57094') || organizations[0];
-          setCurrentOrganization(ncdc);
+          setCurrentOrganization(allOrganizations[0]);
         }
       } else {
-        const ncdc = organizations.find(o => o.councilId === '3c4d4a9f-92a7-4dd2-82fb-ceff90c57094') || organizations[0];
-        setCurrentOrganization(ncdc);
+        setCurrentOrganization(allOrganizations[0]);
       }
     }
-  }, [organizations, currentOrganization]);
+  }, [allOrganizations, currentOrganization]);
 
-  // Persist to localStorage whenever it changes
+  // Persist currentOrganization to localStorage
   useEffect(() => {
     if (currentOrganization) {
       localStorage.setItem('currentOrganization', JSON.stringify(currentOrganization));
+      if (currentOrganization.countryId && currentOrganization.countryId !== selectedCountryId) {
+        setSelectedCountryIdState(currentOrganization.countryId);
+        localStorage.setItem('selectedCountryId', currentOrganization.countryId);
+      }
     }
   }, [currentOrganization]);
 
@@ -83,7 +113,10 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
         currentOrganization,
         setCurrentOrganization,
         organizations,
+        allOrganizations,
         isLoading,
+        selectedCountryId,
+        setSelectedCountryId,
       }}
     >
       {children}

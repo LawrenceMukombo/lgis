@@ -425,7 +425,7 @@ export function TenantConfigTab() {
             fontFamily: 'Inter',
             logoUrl: '/logo.png'
         };
-        setFormData(ncdcDefaults);
+        setFormData((prev: any) => ({ ...prev, ...ncdcDefaults }));
         setPreviewLogo('/logo.png');
         toast({ title: "NCDC Profile Loaded", description: "Click Save to apply these official settings." });
     };

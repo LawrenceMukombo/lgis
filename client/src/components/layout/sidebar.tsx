@@ -14,6 +14,7 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { CountrySwitcher } from "./CountrySwitcher";
+import { useOrganization } from "@/contexts/organization-context";
 
 const NAVIGATION_CATEGORIES = [
   {
@@ -93,7 +94,7 @@ export function Sidebar() {
   const [location] = useLocation();
   const { config } = useTenant();
   const [collapsedCategories, setCollapsedCategories] = useState<Record<string, boolean>>({});
-  const [activeCountryId, setActiveCountryId] = useState<string | null>(null);
+  const { selectedCountryId, setSelectedCountryId } = useOrganization();
 
   const { data: user, isLoading: isUserLoading } = useQuery<any>({ queryKey: ["/api/user"] });
 
@@ -167,8 +168,8 @@ export function Sidebar() {
         <div className="px-4 py-2 border-b border-white/10">
           <p className="text-[9px] font-black uppercase tracking-widest text-white/30 mb-1.5 px-1">Tenant</p>
           <CountrySwitcher
-            activeCountryId={activeCountryId}
-            onSelect={setActiveCountryId}
+            activeCountryId={selectedCountryId}
+            onSelect={setSelectedCountryId}
           />
         </div>
       )}

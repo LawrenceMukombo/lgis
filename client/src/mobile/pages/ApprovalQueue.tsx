@@ -8,7 +8,7 @@ import { useLocation } from "wouter";
 export default function ApprovalQueue() {
     const [, setLocation] = useLocation();
 
-    const { data: requests, isLoading } = useQuery({
+    const { data: requests, isLoading } = useQuery<any[]>({
         queryKey: ["/api/service-requests"],
     });
 

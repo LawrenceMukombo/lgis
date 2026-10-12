@@ -12,7 +12,7 @@ export default function LicenseViewer() {
     const { id } = useParams<{ id: string }>();
     const { toast } = useToast();
 
-    const { data: license, isLoading } = useQuery({
+    const { data: license, isLoading } = useQuery<any>({
         queryKey: [`/api/licences/${id}`],
     });
 

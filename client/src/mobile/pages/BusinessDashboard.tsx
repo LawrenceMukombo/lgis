@@ -13,11 +13,11 @@ export default function BusinessDashboard() {
     queryKey: ["/api/user"],
   });
 
-  const { data: requests } = useQuery({
+  const { data: requests } = useQuery<any[]>({
     queryKey: ["/api/service-requests"],
   });
 
-  const { data: licenses } = useQuery({
+  const { data: licenses } = useQuery<any[]>({
     queryKey: ["/api/licences"],
   });
 

@@ -57,9 +57,7 @@ export function FieldPolicyMatrix() {
         queryKey: ["/api/v1/field-policies", currentOrganization?.councilId],
         queryFn: async () => {
             if (!currentOrganization?.councilId) return [];
-            const res = await apiRequest("GET", `/api/v1/field-policies`, undefined, {
-                "x-council-id": currentOrganization.councilId
-            });
+            const res = await apiRequest("GET", `/api/v1/field-policies`);
             return res.json();
         },
         enabled: !!currentOrganization?.councilId
@@ -82,9 +80,7 @@ export function FieldPolicyMatrix() {
     // Save mutation
     const saveMutation = useMutation({
         mutationFn: async (policy: FieldPolicy) => {
-            const res = await apiRequest("POST", "/api/v1/field-policies", policy, {
-                "x-council-id": currentOrganization?.councilId || ""
-            });
+            const res = await apiRequest("POST", "/api/v1/field-policies", policy);
             return res.json();
         },
         onSuccess: () => {

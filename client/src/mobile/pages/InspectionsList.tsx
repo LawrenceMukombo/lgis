@@ -8,7 +8,7 @@ import { useLocation } from "wouter";
 export default function InspectionsList() {
     const [, setLocation] = useLocation();
 
-    const { data: inspections, isLoading } = useQuery({
+    const { data: inspections, isLoading } = useQuery<any[]>({
         queryKey: ["/api/inspections"],
     });
 

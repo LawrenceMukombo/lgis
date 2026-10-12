@@ -85,9 +85,9 @@ export function Header() {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <span className="text-xs flex items-center mt-0.5 text-foreground-dimmer">
+          <span className="text-xs flex items-center mt-0.5 text-foreground-dimmer font-medium">
             <MapPin className="h-3 w-3 mr-1 text-accent-negative-default" />
-            Papua New Guinea
+            {currentOrganization?.countryCode === 'ZM' ? '🇿🇲 Zambia' : currentOrganization?.countryCode === 'PG' ? '🇵🇬 Papua New Guinea' : (currentOrganization?.countryCode ? `Tenant: ${currentOrganization.countryCode}` : 'Local Government')}
           </span>
         </div>
       </div>

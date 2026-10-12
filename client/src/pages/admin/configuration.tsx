@@ -15,7 +15,8 @@ import { LicenseFeeManagement } from "@/components/admin/LicenseFeeManagement";
 import { WorkflowManagement } from "@/components/admin/WorkflowManagement";
 import { PermissionManagement } from "@/components/admin/PermissionManagement";
 import { LicenseRequirementsTab } from "@/components/admin/LicenseRequirementsTab";
-import { Save, Upload, Plus, Database, ArrowRight, Shield, Lock, AlertTriangle, DollarSign, FileCheck } from "lucide-react";
+import { CountryCouncilOnboarding } from "@/components/admin/CountryCouncilOnboarding";
+import { Save, Upload, Plus, Database, ArrowRight, Shield, Lock, AlertTriangle, DollarSign, FileCheck, Globe } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 
@@ -52,6 +53,7 @@ export default function ConfigurationPage() {
         <TabsList className="flex flex-wrap gap-2 bg-transparent h-auto p-0 justify-start w-full">
           {[
             { value: 'organization', label: 'Organization & Tenant' },
+            { value: 'countries', label: 'Countries & Councils', icon: Globe },
             { value: 'services', label: 'Service Catalogue' },
             { value: 'workflows', label: 'Workflows & Rules' },
             { value: 'notifications', label: 'Notifications' },
@@ -76,6 +78,11 @@ export default function ConfigurationPage() {
         {/* Organization & Tenant Tab */}
         <TabsContent value="organization">
           <TenantConfigTab />
+        </TabsContent>
+
+        {/* Countries & Councils Tab */}
+        <TabsContent value="countries">
+          <CountryCouncilOnboarding />
         </TabsContent>
 
         {/* Service Catalogue Tab */}

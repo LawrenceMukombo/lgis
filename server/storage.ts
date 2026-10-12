@@ -542,7 +542,8 @@ export class DatabaseStorage implements IStorage {
     const recentActivity = recentActivityResult.map(log => {
       let description = `Action: ${log.action} on ${log.entityType}`;
       let type = 'System Update';
-      let amount = (log.details as any)?.amount || (log.details as any)?.total || 0;
+      const stateObj = (log.afterState as any) || (log.beforeState as any) || {};
+      let amount = stateObj?.amount || stateObj?.total || 0;
 
       // Better mapping for Activity Feed
       if (log.entityType === 'licence') {
@@ -554,7 +555,7 @@ export class DatabaseStorage implements IStorage {
       } else if (log.entityType === 'service_request') {
         type = 'Application Update';
         if (log.action === 'status_change') {
-          const newState = (log.details as any)?.afterState || 'updated';
+          const newState = stateObj?.status || stateObj?.afterState || 'updated';
           description = `Application status updated to ${newState}.`;
         } else {
           description = `Application updated.`;
@@ -581,6 +582,7 @@ export class DatabaseStorage implements IStorage {
 
     // 8. Critical Alerts
     // 8a. Expired Licenses
+    const todayStr = new Date().toISOString().split('T')[0];
     const expiredLicenses = await db
       .select({
         name: businesses.legalName,
@@ -592,7 +594,7 @@ export class DatabaseStorage implements IStorage {
       .where(
         and(
           eq(licences.councilId, councilId),
-          lt(licences.expiryDate, new Date())
+          lt(licences.expiryDate, todayStr)
         )
       )
       .limit(3);

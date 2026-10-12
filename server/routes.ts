@@ -58,7 +58,10 @@ import { setupAuth } from "./auth";
 
 import multer from "multer";
 
-const upload = multer({ dest: "uploads/" });
+const upload = multer({
+  dest: "uploads/",
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
+});
 
 export async function registerRoutes(
   httpServer: Server,
@@ -76,10 +79,16 @@ export async function registerRoutes(
     res.status(200).json({ status: "ok", message: "LGIS Server Online" });
   });
 
+  // Set up authentication routes and session middleware first
+  setupAuth(app);
+
+  // Apply country (tenant) scoping to all API routes
+  app.use("/api", countryScope);
+
   // ============================================================
-  // COUNTRY (TENANT) MANAGEMENT — System Administrators only
+  // COUNTRY (TENANT) MANAGEMENT & ONBOARDING
   // ============================================================
-  app.get("/api/countries", isAuthenticated, async (_req, res) => {
+  app.get("/api/countries", async (_req, res) => {
     try {
       const list = await storage.getCountries();
       res.json(list);
@@ -89,7 +98,7 @@ export async function registerRoutes(
     }
   });
 
-  app.get("/api/countries/:countryId", isAuthenticated, requireSuperAdmin, async (req, res) => {
+  app.get("/api/countries/:countryId", async (req, res) => {
     try {
       const c = await storage.getCountryById(req.params.countryId);
       if (!c) return res.status(404).json({ success: false, message: "Country not found" });
@@ -97,6 +106,16 @@ export async function registerRoutes(
     } catch (err) {
       console.error("[countries] GET/:id error:", err);
       res.status(500).json({ success: false, message: "Failed to fetch country" });
+    }
+  });
+
+  app.get("/api/countries/:countryId/councils", async (req, res) => {
+    try {
+      const list = await storage.getCouncils(req.params.countryId);
+      res.json(list);
+    } catch (err) {
+      console.error("[countries/:id/councils] GET error:", err);
+      res.status(500).json({ success: false, message: "Failed to fetch councils for country" });
     }
   });
 
@@ -121,13 +140,95 @@ export async function registerRoutes(
     }
   });
 
-  app.post("/api/v1/uploads", upload.single("file"), async (req, res) => {
+  app.post("/api/countries/:countryId/councils", isAuthenticated, requireSuperAdmin, async (req, res) => {
+    try {
+      const country = await storage.getCountryById(req.params.countryId);
+      if (!country) return res.status(404).json({ success: false, message: "Country not found" });
+
+      const councilData = insertCouncilSchema.parse({
+        countryId: country.countryId,
+        countryCode: req.body.countryCode || country.countryCode,
+        currencyCode: req.body.currencyCode || country.currencyCode,
+        timezone: req.body.timezone || country.timezone,
+        dateFormat: req.body.dateFormat || country.dateFormat || "dd/MM/yyyy",
+        level: req.body.level || "city",
+        status: req.body.status || "active",
+        ...req.body,
+      });
+
+      const created = await storage.createCouncil(councilData);
+      res.status(201).json(created);
+    } catch (err) {
+      console.error("[countries/:id/councils] POST error:", err);
+      res.status(400).json({ success: false, message: "Failed to onboard council", error: (err as any).message });
+    }
+  });
+
+  // Bulk Onboarding: Country + Initial Councils in one flow
+  app.post("/api/countries/onboard", isAuthenticated, requireSuperAdmin, async (req, res) => {
+    try {
+      const { country: countryData, councils: councilsList = [] } = req.body;
+      if (!countryData || !countryData.countryCode || !countryData.name) {
+        return res.status(400).json({ success: false, message: "Country name and countryCode are required" });
+      }
+
+      // Check if country already exists
+      let country = await storage.getCountryByCode(countryData.countryCode);
+      if (!country) {
+        country = await storage.createCountry({
+          countryCode: countryData.countryCode.toUpperCase(),
+          name: countryData.name,
+          currencyCode: (countryData.currencyCode || "USD").toUpperCase(),
+          currencySymbol: countryData.currencySymbol || "$",
+          timezone: countryData.timezone || "UTC",
+          locale: countryData.locale || "en",
+          dateFormat: countryData.dateFormat || "DD/MM/YYYY",
+          flagEmoji: countryData.flagEmoji || "🏳",
+          status: "active",
+        });
+      }
+
+      // Create councils for this country
+      const createdCouncils = [];
+      for (const c of councilsList) {
+        if (!c.name) continue;
+        const councilData = insertCouncilSchema.parse({
+          countryId: country.countryId,
+          countryCode: country.countryCode,
+          currencyCode: country.currencyCode,
+          timezone: country.timezone,
+          name: c.name,
+          level: c.level || "city",
+          address: c.address || "",
+          phone: c.phone || "",
+          email: c.email || "",
+          website: c.website || "",
+          status: "active",
+        });
+        const created = await storage.createCouncil(councilData);
+        createdCouncils.push(created);
+      }
+
+      res.status(201).json({
+        success: true,
+        message: `Successfully onboarded country ${country.name} with ${createdCouncils.length} council(s).`,
+        country,
+        councils: createdCouncils,
+      });
+    } catch (err) {
+      console.error("[countries/onboard] POST error:", err);
+      res.status(500).json({ success: false, message: "Onboarding failed", error: (err as any).message });
+    }
+  });
+
+  app.post("/api/v1/uploads", isAuthenticated, upload.single("file"), async (req, res) => {
     try {
       if (!req.file) {
         return res.status(400).send("No file uploaded.");
       }
+      const user = req.user as any;
       const fileData = {
-        councilId: "ncdc-council-id", // TODO: Extract from auth context
+        councilId: user?.councilId || "ncdc-council-id",
         entityType: "request", // Default
         entityId: "temp-id",
         documentType: "supporting_doc",
@@ -136,7 +237,7 @@ export async function registerRoutes(
         mimeType: req.file.mimetype,
         fileSize: req.file.size,
         status: "pending",
-        uploadedBy: "system_user" // TODO: Extract from auth context
+        uploadedBy: user?.userId || "system_user"
       };
       // For now just return the file info, actual DB storage for documents is handled in specific endpoints
       res.json(fileData);
@@ -157,7 +258,7 @@ export async function registerRoutes(
         res.json(requests);
       } else {
         // Filter for citizens
-        const myRequests = requests.filter(r => r.requesterId === user.userId || r.submittedBy === user.userId);
+        const myRequests = requests.filter(r => r.requesterId === user.userId || (r as any).submittedBy === user.userId);
         res.json(myRequests);
       }
     } catch (error) {
@@ -419,9 +520,10 @@ export async function registerRoutes(
   });
 
   // Notifications
-  app.get("/api/v1/notifications", async (req, res) => {
+  app.get("/api/v1/notifications", isAuthenticated, async (req, res) => {
     try {
-      const userId = req.headers["x-user-id"] as string || req.query.userId as string;
+      const user = req.user as any;
+      const userId = user?.userId;
       if (!userId) return res.status(400).json({ error: "User ID required" });
       const notes = await storage.getNotifications(userId);
       res.json(notes);
@@ -429,12 +531,6 @@ export async function registerRoutes(
       res.status(500).json({ error: "Failed to fetch notifications" });
     }
   });
-
-  // Set up authentication routes and session middleware
-  setupAuth(app);
-
-  // Apply country (tenant) scoping to all authenticated API routes
-  app.use("/api", countryScope);
 
   // Register Field Policy Routes
   registerFieldPolicyRoutes(app);
@@ -697,7 +793,8 @@ export async function registerRoutes(
   // ================================
   app.get("/api/v1/councils", async (req, res) => {
     try {
-      const data = await storage.getCouncils();
+      const countryId = (req.query.countryId as string) || (req as any).countryId;
+      const data = await storage.getCouncils(countryId || undefined);
       res.json(data);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch councils" });
@@ -718,10 +815,24 @@ export async function registerRoutes(
 
   app.post("/api/v1/councils", async (req, res) => {
     try {
-      const data = insertCouncilSchema.parse(req.body);
+      const countryId = req.body.countryId || (req as any).countryId;
+      let bodyData = { ...req.body };
+      if (countryId && !bodyData.countryId) {
+        bodyData.countryId = countryId;
+      }
+      if (bodyData.countryId) {
+        const country = await storage.getCountryById(bodyData.countryId);
+        if (country) {
+          bodyData.countryCode = bodyData.countryCode || country.countryCode;
+          bodyData.currencyCode = bodyData.currencyCode || country.currencyCode;
+          bodyData.timezone = bodyData.timezone || country.timezone;
+        }
+      }
+      const data = insertCouncilSchema.parse(bodyData);
       const council = await storage.createCouncil(data);
       res.status(201).json(council);
     } catch (error) {
+      console.error("Create council error:", error);
       res.status(400).json({ error: "Invalid council data" });
     }
   });
@@ -773,7 +884,8 @@ export async function registerRoutes(
   // Legacy councils endpoint for frontend compatibility
   app.get("/api/councils", async (req, res) => {
     try {
-      const data = await storage.getCouncils();
+      const countryId = (req.query.countryId as string) || (req as any).countryId;
+      const data = await storage.getCouncils(countryId || undefined);
       res.json(data);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch councils" });
@@ -1573,11 +1685,9 @@ export async function registerRoutes(
         councilId,
         ownerType: "licence",
         ownerId: licence.licenceId,
-        name: "Official Licence Certificate",
         type: "Certificate",
         fileName: filename,
         filePath: filePath,
-        url: `/uploads/certificates/${filename}`,
         mimeType: "application/pdf",
         fileSize: pdfBuffer.length,
         status: "approved",
