@@ -1906,7 +1906,7 @@ export function ElectronicShopLicenseForm({ onSubmit, isSubmitting, defaultValue
                     name="radioLicenseNo"
                     render={({ field }) => (
                         <FormItem>
-                            <FormLabel>Radio Apparatus License No. (NICTA)</FormLabel>
+                            <FormLabel>Radio Apparatus License No. (ZICTA)</FormLabel>
                             <FormControl><Input {...field} placeholder="If applicable" /></FormControl>
                             <FormMessage />
                         </FormItem>

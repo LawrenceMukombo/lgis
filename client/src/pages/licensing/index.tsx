@@ -86,8 +86,9 @@ export default function LicensingPage() {
     user?.role === 'officer' ||
     user?.role === 'inspector' ||
     user?.role === 'manager' ||
-    (user?.email && user.email.endsWith('@ncdc.gov.pg')) ||
-    user?.email === 'admin@ncdc.gov.pg'
+    (user?.email && (user.email.endsWith('@lcc.gov.zm') || user.email.endsWith('@council.gov.zm') || user.email.endsWith('@ncdc.gov.pg'))) ||
+    user?.email === 'admin@ncdc.gov.pg' ||
+    user?.email === 'admin@lcc.gov.zm'
   );
 
   console.log('DEBUG: User Data:', user);
@@ -536,7 +537,7 @@ export default function LicensingPage() {
                     <CardContent className="px-6 py-0 flex-1">
                       <CardTitle className="text-sm font-black mb-2 line-clamp-1 uppercase tracking-tight group-hover:text-primary transition-colors font-display text-foreground-default">{license.licenseName}</CardTitle>
                       <p className="text-xs leading-relaxed text-muted-foreground line-clamp-3 font-medium">
-                        {license.description || `Official Permit for ${license.licenseName}. Legal authority to operate within NCD.`}
+                        {license.description || `Official statutory operating permit and license for ${license.licenseName}. Authorized by Local Government Authority.`}
                       </p>
                     </CardContent>
                     <CardFooter className="p-6 pt-0 gap-2 mt-6 flex-row">
