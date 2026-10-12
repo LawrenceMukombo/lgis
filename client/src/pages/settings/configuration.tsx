@@ -12,6 +12,8 @@ import { BreakGlassWorkflow } from "@/components/security/BreakGlassWorkflow";
 import { LicenseRequirementsTab } from "@/components/admin/LicenseRequirementsTab";
 import { RoleManagement } from "@/components/admin/RoleManagement";
 import { AuditLogsViewer } from "@/components/admin/AuditLogsViewer";
+import { BoundaryManagement } from "@/components/admin/BoundaryManagement";
+import { CountryCouncilOnboarding } from "@/components/admin/CountryCouncilOnboarding";
 import {
     Shield,
     Key,
@@ -98,6 +100,18 @@ export default function ConfigurationPage() {
                         >
                             License Requirements
                         </TabsTrigger>
+                        <TabsTrigger
+                            value="countries"
+                            className="h-12 px-6 border-2 border-foreground/10 data-[state=active]:bg-[#0F0F0F] data-[state=active]:text-[#F4C400] data-[state=active]:border-[#0F0F0F] bg-[#FEF7E0] text-foreground font-bold uppercase tracking-widest transition-all rounded-lg shadow-sm hover:translate-y-[-1px] hover:shadow-md"
+                        >
+                            Country Onboarding
+                        </TabsTrigger>
+                        <TabsTrigger
+                            value="boundaries"
+                            className="h-12 px-6 border-2 border-foreground/10 data-[state=active]:bg-[#0F0F0F] data-[state=active]:text-[#F4C400] data-[state=active]:border-[#0F0F0F] bg-[#FEF7E0] text-foreground font-bold uppercase tracking-widest transition-all rounded-lg shadow-sm hover:translate-y-[-1px] hover:shadow-md"
+                        >
+                            Boundary Manager
+                        </TabsTrigger>
                     </TabsList>
 
                     {/* PERMISSIONS TAB */}
@@ -128,6 +142,16 @@ export default function ConfigurationPage() {
                     {/* LICENSING TAB */}
                     <TabsContent value="licensing">
                         <LicenseRequirementsTab />
+                    </TabsContent>
+
+                    {/* COUNTRY ONBOARDING TAB */}
+                    <TabsContent value="countries">
+                        <CountryCouncilOnboarding />
+                    </TabsContent>
+
+                    {/* BOUNDARY MANAGER TAB */}
+                    <TabsContent value="boundaries">
+                        <BoundaryManagement />
                     </TabsContent>
                 </Tabs>
             </div>

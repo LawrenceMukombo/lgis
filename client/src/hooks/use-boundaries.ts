@@ -144,3 +144,78 @@ export function useSyncGadm() {
     },
   });
 }
+
+export interface BoundaryDatasetItem {
+  level: number;
+  levelBadge: string;
+  name: string;
+  levelType: string;
+  countryCode: string;
+  iso3: string;
+  featureCount: number;
+  source: string;
+  status: string;
+  updatedAt: string;
+}
+
+export interface BoundaryDatasetsSummaryResponse {
+  countryCode: string;
+  iso3: string;
+  totalDatasets: number;
+  datasets: BoundaryDatasetItem[];
+}
+
+export function useBoundaryDatasetsSummary(countryCode: string = "ZM") {
+  return useQuery<BoundaryDatasetsSummaryResponse>({
+    queryKey: ["/api/boundaries/datasets-summary", countryCode],
+    queryFn: async () => {
+      const res = await apiRequest("GET", `/api/boundaries/datasets-summary?countryCode=${countryCode}`);
+      return res.json();
+    },
+    enabled: !!countryCode,
+  });
+}
+
+export function useSyncGeoBoundaries() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload: { countryCode?: string; level?: string; countryId?: string | null }) => {
+      const res = await apiRequest("POST", "/api/boundaries/sync-geoboundaries", payload);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/boundaries"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/boundaries/datasets-summary"] });
+    },
+  });
+}
+
+export function useUploadHqCsv() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload: { csvContent: string; countryCode?: string; level?: number }) => {
+      const res = await apiRequest("POST", "/api/boundaries/upload-hq-csv", payload);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/boundaries"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/councils"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/boundaries/datasets-summary"] });
+    },
+  });
+}
+
+export function useClearLevel() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload: { countryCode: string; level: number }) => {
+      const res = await apiRequest("POST", "/api/boundaries/clear-level", payload);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/boundaries"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/boundaries/datasets-summary"] });
+    },
+  });
+}
+

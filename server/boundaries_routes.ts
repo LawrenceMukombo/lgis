@@ -215,6 +215,144 @@ export function registerBoundaryRoutes(app: Express) {
     }
   });
 
+  // 1b. Dataset summary per country tier (as seen in VaxPlan Loaded Boundary Datasets card)
+  app.get("/api/boundaries/datasets-summary", async (req: Request, res: Response) => {
+    try {
+      const countryCode = ((req.query.countryCode as string) || "ZM").toUpperCase();
+
+      const iso3Map: Record<string, string> = {
+        ZM: "ZMB",
+        PG: "PNG",
+        KE: "KEN",
+        UG: "UGA",
+        TZ: "TZA",
+        MW: "MWI",
+        RW: "RWA",
+        ZW: "ZWE",
+      };
+      const iso3 = iso3Map[countryCode] || countryCode;
+
+      // Group active boundaries by level
+      const summaryRes = await pool.query(
+        `SELECT 
+          b.level,
+          b.level_type,
+          b.country_code,
+          COUNT(*)::int as feature_count,
+          MAX(b.updated_at) as updated_at,
+          MODE() WITHIN GROUP (ORDER BY b.source) as primary_source
+        FROM administrative_boundaries b
+        WHERE b.country_code = $1 AND b.status = 'active'
+        GROUP BY b.level, b.level_type, b.country_code
+        ORDER BY b.level ASC`,
+        [countryCode]
+      );
+
+      // Map level names cleanly
+      const levelNameMap: Record<number, { name: string; type: string }> = {
+        0: { name: "Country", type: "country" },
+        1: { name: "Province", type: "province" },
+        2: { name: "District", type: "district" },
+        3: { name: "Ward", type: "ward" },
+        4: { name: "Sub-Ward", type: "sub-ward" },
+      };
+
+      const datasets = summaryRes.rows.map(row => {
+        const lvl = row.level;
+        const config = levelNameMap[lvl] || { name: `Level ${lvl}`, type: row.level_type };
+        return {
+          level: lvl,
+          levelBadge: `L${lvl}`,
+          name: config.name,
+          levelType: row.level_type || config.type,
+          countryCode: row.country_code,
+          iso3,
+          featureCount: row.feature_count,
+          source: row.primary_source || "GeoBoundaries API",
+          status: "Active",
+          updatedAt: row.updated_at,
+        };
+      });
+
+      res.json({
+        countryCode,
+        iso3,
+        totalDatasets: datasets.length,
+        datasets,
+      });
+    } catch (err: any) {
+      console.error("[GET /api/boundaries/datasets-summary] Error:", err);
+      res.status(500).json({ error: "Failed to get boundary datasets summary", details: err.message });
+    }
+  });
+
+  // 1c. Export all boundaries for a specific level (L1, L2, L3)
+  app.get("/api/boundaries/export-level", async (req: Request, res: Response) => {
+    try {
+      const countryCode = ((req.query.countryCode as string) || "ZM").toUpperCase();
+      const level = parseInt((req.query.level as string) || "1", 10);
+      const format = ((req.query.format as string) || "geojson").toLowerCase();
+
+      const result = await pool.query(
+        `SELECT * FROM administrative_boundaries 
+         WHERE country_code = $1 AND level = $2 AND status = 'active'
+         ORDER BY name ASC`,
+        [countryCode, level]
+      );
+
+      const features = result.rows.map(b => ({
+        type: "Feature",
+        id: b.boundary_id,
+        geometry: {
+          type: b.geometry_type || "Polygon",
+          coordinates: b.coordinates,
+        },
+        properties: {
+          boundaryId: b.boundary_id,
+          name: b.name,
+          level: b.level,
+          levelType: b.level_type,
+          code: b.code,
+          parentName: b.parent_name,
+          countryCode: b.country_code,
+          centroid: b.centroid,
+          boundingBox: b.bounding_box,
+          source: b.source,
+          ...(b.properties || {}),
+        },
+      }));
+
+      const collection = {
+        type: "FeatureCollection",
+        metadata: {
+          countryCode,
+          level,
+          levelType: result.rows[0]?.level_type || `Level ${level}`,
+          featureCount: features.length,
+          exportedAt: new Date().toISOString(),
+        },
+        features,
+      };
+
+      const levelTypeName = result.rows[0]?.level_type || `level${level}`;
+      const filename = `${countryCode}_${levelTypeName}_L${level}`;
+
+      if (format === "kml") {
+        const kmlContent = convertGeoJsonToKml(collection, `${countryCode} Level ${level} Boundaries`);
+        res.setHeader("Content-Type", "application/vnd.google-earth.kml+xml");
+        res.setHeader("Content-Disposition", `attachment; filename="${filename}.kml"`);
+        return res.send(kmlContent);
+      }
+
+      res.setHeader("Content-Type", "application/geo+json");
+      res.setHeader("Content-Disposition", `attachment; filename="${filename}.geojson"`);
+      return res.json(collection);
+    } catch (err: any) {
+      console.error("[GET /api/boundaries/export-level] Error:", err);
+      res.status(500).json({ error: "Failed to export level boundaries", details: err.message });
+    }
+  });
+
   // 2. Get single boundary by ID (with full geometry)
   app.get("/api/boundaries/:boundaryId", async (req: Request, res: Response) => {
     try {
@@ -864,6 +1002,328 @@ export function registerBoundaryRoutes(app: Express) {
     } catch (err: any) {
       console.error("[POST /api/boundaries/sync-gadm] Error:", err);
       res.status(500).json({ error: "Failed to sync GADM boundaries", details: err.message });
+    }
+  });
+
+  // 9b. Sync official GeoBoundaries API datasets on demand
+  app.post("/api/boundaries/sync-geoboundaries", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const countryCode = ((req.body.countryCode as string) || "ZM").toUpperCase();
+      const requestedLevel = (req.body.level as string) || "ALL"; // 'ADM1', 'ADM2', 'ADM3', 'ALL'
+      const countryId = req.body.countryId;
+
+      let targetCountryId = countryId;
+      if (!targetCountryId) {
+        const cRes = await pool.query(`SELECT country_id FROM countries WHERE country_code = $1 LIMIT 1`, [countryCode]);
+        if (cRes.rows.length > 0) {
+          targetCountryId = cRes.rows[0].country_id;
+        }
+      }
+
+      // ISO-2 to ISO-3 map
+      const iso3Map: Record<string, string> = {
+        ZM: "ZMB",
+        PG: "PNG",
+        KE: "KEN",
+        UG: "UGA",
+        TZ: "TZA",
+        MW: "MWI",
+        RW: "RWA",
+        ZW: "ZWE",
+        CD: "COD",
+        AO: "AGO",
+        MZ: "MOZ",
+        BW: "BWA",
+        NA: "NAM",
+        ZA: "ZAF",
+      };
+      const iso3 = iso3Map[countryCode] || (countryCode.length === 3 ? countryCode : "ZMB");
+
+      const levelsToSync: { adm: string; num: number; type: string }[] = [];
+      if (requestedLevel === "ALL" || requestedLevel === "ADM1") {
+        levelsToSync.push({ adm: "ADM1", num: 1, type: "province" });
+      }
+      if (requestedLevel === "ALL" || requestedLevel === "ADM2") {
+        levelsToSync.push({ adm: "ADM2", num: 2, type: "district" });
+      }
+      if (requestedLevel === "ALL" || requestedLevel === "ADM3") {
+        levelsToSync.push({ adm: "ADM3", num: 3, type: "ward" });
+      }
+
+      const results: Record<string, { status: string; count: number; error?: string }> = {};
+
+      for (const item of levelsToSync) {
+        try {
+          const apiUrl = `https://www.geoboundaries.org/api/current/gbOpen/${iso3}/${item.adm}/`;
+          console.log(`[sync-geoboundaries] Querying ${apiUrl}...`);
+          const metaRes = await fetch(apiUrl, { headers: { "User-Agent": "LGIS-GeoBoundaries-Client" } });
+
+          if (!metaRes.ok) {
+            results[item.adm] = {
+              status: "skipped",
+              count: 0,
+              error: `API returned HTTP ${metaRes.status} (level may not exist in GeoBoundaries open dataset)`,
+            };
+            continue;
+          }
+
+          const meta = await metaRes.json();
+          const downloadUrl = meta.gjDownloadURL || meta.staticDownloadLink;
+          if (!downloadUrl) {
+            results[item.adm] = { status: "failed", count: 0, error: "No download URL returned by GeoBoundaries" };
+            continue;
+          }
+
+          console.log(`[sync-geoboundaries] Downloading GeoJSON from ${downloadUrl}...`);
+          const geoRes = await fetch(downloadUrl, { headers: { "User-Agent": "LGIS-GeoBoundaries-Client" } });
+          if (!geoRes.ok) {
+            results[item.adm] = { status: "failed", count: 0, error: `Failed to download GeoJSON: HTTP ${geoRes.status}` };
+            continue;
+          }
+
+          const geoData = await geoRes.json();
+          const features = geoData.features || [];
+          let insertedOrUpdated = 0;
+
+          for (const feat of features) {
+            if (!feat.geometry?.coordinates) continue;
+            const p = feat.properties || {};
+            const featName = p.shapeName || p.shapeGroup || p.shapeName_1 || p.shapeName_2 || p.name || p.NAME || `Feature ${insertedOrUpdated + 1}`;
+            const featCode = p.shapeID || p.shapeISO || p.shapeGroup || null;
+            const { bbox, centroid } = calculateBoundsAndCentroid(feat.geometry);
+
+            // Check if boundary exists by code or name
+            let councilId = null;
+            if (item.num === 2) {
+              const cleanName = featName.replace(/council|city|municipal|town|district/gi, "").trim();
+              const cMatch = await pool.query(
+                `SELECT council_id FROM councils WHERE country_code = $1 AND name ILIKE $2 LIMIT 1`,
+                [countryCode, `%${cleanName}%`]
+              );
+              if (cMatch.rows.length > 0) {
+                councilId = cMatch.rows[0].council_id;
+              }
+            }
+
+            const existing = await pool.query(
+              `SELECT boundary_id FROM administrative_boundaries 
+               WHERE country_code = $1 AND level = $2 AND (code = $3 OR name ILIKE $4) AND status = 'active' LIMIT 1`,
+              [countryCode, item.num, featCode, featName]
+            );
+
+            if (existing.rows.length > 0) {
+              await pool.query(
+                `UPDATE administrative_boundaries SET
+                  geometry_type = $1,
+                  coordinates = $2,
+                  centroid = $3,
+                  bounding_box = $4,
+                  source = 'GeoBoundaries API',
+                  source_url = $5,
+                  properties = $6,
+                  council_id = COALESCE(council_id, $7),
+                  updated_at = now()
+                WHERE boundary_id = $8`,
+                [
+                  feat.geometry.type,
+                  JSON.stringify(feat.geometry.coordinates),
+                  JSON.stringify(centroid),
+                  JSON.stringify(bbox),
+                  downloadUrl,
+                  JSON.stringify(p),
+                  councilId,
+                  existing.rows[0].boundary_id,
+                ]
+              );
+            } else {
+              await pool.query(
+                `INSERT INTO administrative_boundaries (
+                  country_id, country_code, level, level_type, name, code, parent_code, parent_name,
+                  council_id, source, source_url, geometry_type, coordinates, centroid, bounding_box, properties, status
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'GeoBoundaries API', $10, $11, $12, $13, $14, $15, 'active')`,
+                [
+                  targetCountryId || null,
+                  countryCode,
+                  item.num,
+                  item.type,
+                  featName,
+                  featCode,
+                  p.shapeGroup || null,
+                  p.shapeGroup || null,
+                  councilId,
+                  downloadUrl,
+                  feat.geometry.type,
+                  JSON.stringify(feat.geometry.coordinates),
+                  JSON.stringify(centroid),
+                  JSON.stringify(bbox),
+                  JSON.stringify(p),
+                ]
+              );
+            }
+            insertedOrUpdated++;
+          }
+
+          results[item.adm] = {
+            status: "success",
+            count: insertedOrUpdated,
+          };
+        } catch (itemErr: any) {
+          console.error(`[sync-geoboundaries] Error on ${item.adm}:`, itemErr);
+          results[item.adm] = { status: "failed", count: 0, error: itemErr.message };
+        }
+      }
+
+      res.json({
+        success: true,
+        countryCode,
+        iso3,
+        results,
+      });
+    } catch (err: any) {
+      console.error("[POST /api/boundaries/sync-geoboundaries] Error:", err);
+      res.status(500).json({ error: "Failed to sync GeoBoundaries", details: err.message });
+    }
+  });
+
+  // 9e. Upload Headquarters CSV (Upload HQ CSV)
+  app.post("/api/boundaries/upload-hq-csv", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const { csvContent, countryCode = "ZM", level = 2 } = req.body;
+
+      if (!csvContent || typeof csvContent !== "string") {
+        return res.status(400).json({ error: "csvContent string is required" });
+      }
+
+      const lines = csvContent.split(/\r?\n/).filter(line => line.trim().length > 0);
+      if (lines.length < 2) {
+        return res.status(400).json({ error: "CSV must contain at least a header and one data row" });
+      }
+
+      const headerLine = lines[0];
+      const headers = headerLine.split(",").map(h => h.trim().toLowerCase().replace(/['"]/g, ""));
+
+      // Column index matching
+      const nameIdx = headers.findIndex(h => h.includes("name") || h.includes("council") || h.includes("district"));
+      const codeIdx = headers.findIndex(h => h.includes("code") || h.includes("id"));
+      const latIdx = headers.findIndex(h => h.includes("lat") || h.includes("y"));
+      const lngIdx = headers.findIndex(h => h.includes("lng") || h.includes("lon") || h.includes("x"));
+      const addrIdx = headers.findIndex(h => h.includes("address") || h.includes("location"));
+      const phoneIdx = headers.findIndex(h => h.includes("phone") || h.includes("tel"));
+      const emailIdx = headers.findIndex(h => h.includes("email"));
+
+      if (nameIdx === -1) {
+        return res.status(400).json({ error: "CSV must contain a 'name' or 'council' column" });
+      }
+
+      let updatedCount = 0;
+      let createdPoints = 0;
+
+      for (let i = 1; i < lines.length; i++) {
+        const row = lines[i].split(",").map(c => c.trim().replace(/^["']|["']$/g, ""));
+        const nameVal = row[nameIdx];
+        if (!nameVal) continue;
+
+        const codeVal = codeIdx !== -1 ? row[codeIdx] : null;
+        const latVal = latIdx !== -1 ? parseFloat(row[latIdx]) : NaN;
+        const lngVal = lngIdx !== -1 ? parseFloat(row[lngIdx]) : NaN;
+        const addrVal = addrIdx !== -1 ? row[addrIdx] : null;
+        const phoneVal = phoneIdx !== -1 ? row[phoneIdx] : null;
+        const emailVal = emailIdx !== -1 ? row[emailIdx] : null;
+
+        // Try updating council if exists
+        const cleanName = nameVal.replace(/council|city|municipal|town|district/gi, "").trim();
+        const councilMatch = await pool.query(
+          `SELECT council_id FROM councils WHERE country_code = $1 AND name ILIKE $2 LIMIT 1`,
+          [countryCode, `%${cleanName}%`]
+        );
+
+        if (councilMatch.rows.length > 0) {
+          const cId = councilMatch.rows[0].council_id;
+          const updates: string[] = [];
+          const params: any[] = [cId];
+          let pIdx = 2;
+
+          if (!isNaN(latVal) && !isNaN(lngVal)) {
+            updates.push(`latitude = $${pIdx++}`, `longitude = $${pIdx++}`);
+            params.push(latVal, lngVal);
+          }
+          if (addrVal) {
+            updates.push(`contact_address = $${pIdx++}`);
+            params.push(addrVal);
+          }
+          if (phoneVal) {
+            updates.push(`contact_phone = $${pIdx++}`);
+            params.push(phoneVal);
+          }
+          if (emailVal) {
+            updates.push(`contact_email = $${pIdx++}`);
+            params.push(emailVal);
+          }
+
+          if (updates.length > 0) {
+            await pool.query(
+              `UPDATE councils SET ${updates.join(", ")}, updated_at = now() WHERE council_id = $1`,
+              params
+            );
+            updatedCount++;
+          }
+        }
+
+        // Also update boundary centroid if coordinates provided
+        if (!isNaN(latVal) && !isNaN(lngVal)) {
+          const bMatch = await pool.query(
+            `UPDATE administrative_boundaries SET
+              centroid = $1,
+              updated_at = now()
+             WHERE country_code = $2 AND name ILIKE $3 AND status = 'active' RETURNING boundary_id`,
+            [JSON.stringify({ lat: latVal, lng: lngVal }), countryCode, `%${cleanName}%`]
+          );
+          if (bMatch.rows.length > 0) {
+            createdPoints++;
+          }
+        }
+      }
+
+      res.json({
+        success: true,
+        message: `Processed HQ CSV: Updated ${updatedCount} council(s) and set ${createdPoints} headquarters coordinate centroid(s).`,
+        councilsUpdated: updatedCount,
+        centroidsUpdated: createdPoints,
+        totalRows: lines.length - 1,
+      });
+    } catch (err: any) {
+      console.error("[POST /api/boundaries/upload-hq-csv] Error:", err);
+      res.status(500).json({ error: "Failed to process HQ CSV", details: err.message });
+    }
+  });
+
+  // 9f. Clear / Archive an entire administrative boundary level (Replace flow)
+  app.post("/api/boundaries/clear-level", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const countryCode = ((req.body.countryCode as string) || "ZM").toUpperCase();
+      const level = parseInt(req.body.level, 10);
+
+      if (isNaN(level)) {
+        return res.status(400).json({ error: "Valid level number is required" });
+      }
+
+      // Safe soft-archive
+      const result = await pool.query(
+        `UPDATE administrative_boundaries 
+         SET status = 'archived', updated_at = now()
+         WHERE country_code = $1 AND level = $2 AND status = 'active'
+         RETURNING boundary_id`,
+        [countryCode, level]
+      );
+
+      res.json({
+        success: true,
+        message: `Archived ${result.rows.length} boundary features for level ${level} in ${countryCode}`,
+        archivedCount: result.rows.length,
+      });
+    } catch (err: any) {
+      console.error("[POST /api/boundaries/clear-level] Error:", err);
+      res.status(500).json({ error: "Failed to clear boundary level", details: err.message });
     }
   });
 
