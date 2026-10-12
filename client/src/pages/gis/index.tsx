@@ -5,9 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Layers, Map as MapIcon, Loader2, Navigation, Building2, FileText, CheckCircle2, Clock, XCircle, AlertCircle } from "lucide-react";
+import { Layers, Map as MapIcon, Loader2, Navigation, Building2, FileText, CheckCircle2, Clock, XCircle, AlertCircle, Globe } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { BoundaryManagement } from "@/components/admin/BoundaryManagement";
 import { MapContainer, TileLayer, Marker, Popup, LayersControl, CircleMarker, Polygon } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { Icon } from "leaflet";
@@ -183,6 +184,10 @@ export default function GISPage() {
               <FileText className="mr-2 h-4 w-4" />
               License Applications
             </TabsTrigger>
+            <TabsTrigger value="boundaries" className="data-[state=active]:bg-[#0F0F0F] data-[state=active]:text-[#F4C400] font-bold">
+              <Globe className="mr-2 h-4 w-4" />
+              Boundaries & Shapes
+            </TabsTrigger>
           </TabsList>
 
           <div className="text-sm font-medium px-4 flex items-center gap-2">
@@ -195,7 +200,10 @@ export default function GISPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 h-[calc(100vh-280px)] min-h-[600px]">
+        {activeTab === "boundaries" ? (
+          <BoundaryManagement />
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 h-[calc(100vh-280px)] min-h-[600px]">
           <Card className="lg:col-span-3 h-full overflow-hidden relative border border-input shadow-md p-0 bg-black">
             {loadingBusinesses || loadingRequests ? (
               <div className="absolute inset-0 flex items-center justify-center bg-black/50 z-50">
@@ -429,6 +437,7 @@ export default function GISPage() {
             </Card>
           </div>
         </div>
+        )}
       </Tabs>
     </MainLayout>
   );

@@ -16,7 +16,8 @@ import { WorkflowManagement } from "@/components/admin/WorkflowManagement";
 import { PermissionManagement } from "@/components/admin/PermissionManagement";
 import { LicenseRequirementsTab } from "@/components/admin/LicenseRequirementsTab";
 import { CountryCouncilOnboarding } from "@/components/admin/CountryCouncilOnboarding";
-import { Save, Upload, Plus, Database, ArrowRight, Shield, Lock, AlertTriangle, DollarSign, FileCheck, Globe } from "lucide-react";
+import { BoundaryManagement } from "@/components/admin/BoundaryManagement";
+import { Save, Upload, Plus, Database, ArrowRight, Shield, Lock, AlertTriangle, DollarSign, FileCheck, Globe, MapPin } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 
@@ -54,6 +55,7 @@ export default function ConfigurationPage() {
           {[
             { value: 'organization', label: 'Organization & Tenant' },
             { value: 'countries', label: 'Countries & Councils', icon: Globe },
+            { value: 'boundaries', label: 'Boundaries & GIS', icon: MapPin },
             { value: 'services', label: 'Service Catalogue' },
             { value: 'workflows', label: 'Workflows & Rules' },
             { value: 'notifications', label: 'Notifications' },
@@ -83,6 +85,11 @@ export default function ConfigurationPage() {
         {/* Countries & Councils Tab */}
         <TabsContent value="countries">
           <CountryCouncilOnboarding />
+        </TabsContent>
+
+        {/* Administrative Boundaries & GIS Tab */}
+        <TabsContent value="boundaries">
+          <BoundaryManagement />
         </TabsContent>
 
         {/* Service Catalogue Tab */}

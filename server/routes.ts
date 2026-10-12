@@ -26,6 +26,7 @@ import {
 import { sendEmail, getStatusChangeEmailContent } from "./email";
 import { addUserManagementRoutes } from "./user_management_routes";
 import { registerFieldPolicyRoutes } from "./field_policy_routes";
+import { registerBoundaryRoutes } from "./boundaries_routes";
 import { countryScope, requireSuperAdmin } from "./country-middleware";
 
 async function logAudit(
@@ -534,6 +535,9 @@ export async function registerRoutes(
 
   // Register Field Policy Routes
   registerFieldPolicyRoutes(app);
+
+  // Register Administrative Boundary & GADM Routes
+  registerBoundaryRoutes(app);
 
   // Business Registration Route
   app.post("/api/v1/businesses/register", upload.array("documents"), async (req, res) => {

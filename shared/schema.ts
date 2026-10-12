@@ -640,6 +640,30 @@ export const locations = pgTable("locations", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const administrativeBoundaries = pgTable("administrative_boundaries", {
+  boundaryId: varchar("boundary_id").primaryKey().default(sql`gen_random_uuid()`),
+  countryId: varchar("country_id").references(() => countries.countryId, { onDelete: 'set null' }),
+  countryCode: char("country_code", { length: 2 }).notNull().default("ZM"),
+  level: integer("level").notNull(), // 0: country, 1: province, 2: district/council, 3: ward
+  levelType: text("level_type").notNull(), // 'country', 'province', 'district', 'ward'
+  name: text("name").notNull(),
+  code: text("code"), // GID_0 / GID_1 / GID_2 or local code
+  parentCode: text("parent_code"), // Parent GID / code
+  parentName: text("parent_name"), // Parent name (e.g. Province name)
+  councilId: varchar("council_id").references(() => councils.councilId, { onDelete: 'set null' }),
+  source: text("source").default("GADM"), // 'GADM', 'UPLOAD', 'GITHUB', 'CUSTOM'
+  sourceUrl: text("source_url"),
+  geometryType: text("geometry_type").default("Polygon"), // 'Polygon', 'MultiPolygon'
+  coordinates: jsonb("coordinates"), // GeoJSON coordinates
+  centroid: jsonb("centroid"), // { lat: number, lng: number }
+  boundingBox: jsonb("bounding_box"), // [minLng, minLat, maxLng, maxLat]
+  areaKm2: decimal("area_km2", { precision: 12, scale: 2 }),
+  properties: jsonb("properties"), // Feature properties metadata
+  status: text("status").default("active"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 // ================================
 // ENFORCEMENT CASES & NOTICES
 // ================================
@@ -991,3 +1015,9 @@ export type InsertIntegrationConfig = z.infer<typeof insertIntegrationConfigSche
 export const insertCountrySchema = createInsertSchema(countries).omit({ countryId: true, createdAt: true });
 export type Country = typeof countries.$inferSelect;
 export type InsertCountry = z.infer<typeof insertCountrySchema>;
+
+// Administrative Boundaries types
+export const insertAdministrativeBoundarySchema = createInsertSchema(administrativeBoundaries).omit({ boundaryId: true, createdAt: true, updatedAt: true });
+export type AdministrativeBoundary = typeof administrativeBoundaries.$inferSelect;
+export type InsertAdministrativeBoundary = z.infer<typeof insertAdministrativeBoundarySchema>;
+
