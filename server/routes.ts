@@ -2451,43 +2451,50 @@ export async function registerRoutes(
   // ================================
   app.get("/api/v1/tenant/config", async (req, res) => {
     try {
-      // Default to NCDC if no councilId provided (e.g. on first load)
+      // Default to Lusaka City Council if no councilId provided (e.g. on first load)
       const councilId = req.headers["x-council-id"] as string ||
         req.query.councilId as string ||
-        "3c4d4a9f-92a7-4dd2-82fb-ceff90c57094";
+        "ec9b95a7-c085-4b88-a391-e3c84d7128ce";
 
       const config = await storage.getTenantConfig(councilId);
 
       if (!config) {
-        // Return default if not found
+        const council = await storage.getCouncilById(councilId);
+        const councilName = council?.name || "Lusaka City Council";
+        const shortName = council?.code || (council?.name ? council.name.split(' ').map(w => w[0]).join('') : "LCC");
+        const currency = council?.currencyCode || "ZMW";
+        const currencySymbol = council?.currencySymbol || "K";
+        const timezone = council?.timezone || "Africa/Lusaka";
+        const locale = council?.locale || "en-ZM";
+
         return res.json({
           configId: "default",
           councilId,
-          councilName: "National Capital District Commission",
-          shortName: "NCDC",
+          councilName,
+          shortName,
           logoUrl: "/logo.png",
           primaryColor: "#0F0F0F",
-          secondaryColor: "#F4C400",
-          accentColor: "#F4C400",
-          primaryForeground: "#F4C400", // NCDC Yellow
+          secondaryColor: "#10b981",
+          accentColor: "#10b981",
+          primaryForeground: "#ffffff",
           positiveColor: "#10b981",
           warningColor: "#f59e0b",
           negativeColor: "#ef4444",
-          borderRadius: 4,
-          buttonRadius: 4,
+          borderRadius: 6,
+          buttonRadius: 6,
           cardRadius: 8,
-          inputRadius: 4,
+          inputRadius: 6,
           sidebarBackground: "#0F0F0F",
-          headerBackground: "#F4C400",
+          headerBackground: "#1e293b",
           fontFamily: "Inter",
-          locationLevels: ["Country", "Province", "District", "Ward", "Section", "Lot"],
-          locale: "en-PG",
-          timezone: "Pacific/Port_Moresby",
+          locationLevels: ["Country", "Province", "District", "Ward"],
+          locale,
+          timezone,
           dateFormat: "DD/MM/YYYY",
           timeFormat: "HH:mm",
           firstDayOfWeek: "monday",
-          currency: "PGK",
-          currencySymbol: "K",
+          currency,
+          currencySymbol,
           currencyPosition: "before",
           decimalSeparator: ".",
           thousandsSeparator: ",",
