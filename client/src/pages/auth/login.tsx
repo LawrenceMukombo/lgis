@@ -5,12 +5,23 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Loader2 } from "lucide-react";
-import logo from "@assets/NCDC_Logo_1768314184068.jpg";
+import { Loader2, Building2 } from "lucide-react";
+import { useOrganization } from "@/contexts/organization-context";
+import { useCountries } from "@/hooks/use-countries";
 
 export default function LoginPage() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const { currentOrganization, selectedCountryId } = useOrganization();
+  const { data: countries = [] } = useCountries();
+
+  const activeCountry = countries.find(c => c.countryId === selectedCountryId) ||
+    countries.find(c => c.countryCode === 'ZM') ||
+    countries[0];
+
+  const councilName = currentOrganization?.name || "Lusaka City Council";
+  const countryName = activeCountry?.name || "Republic of Zambia";
+
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
@@ -29,7 +40,6 @@ export default function LoginPage() {
       const res = await apiRequest("POST", "/api/login", formData);
       const user = await res.json();
 
-      // Update global user state (assuming useUser hook or similar exists, but explicit query refetch works too)
       queryClient.setQueryData(["/api/user"], user);
 
       toast({
@@ -37,15 +47,11 @@ export default function LoginPage() {
         description: `Logged in as ${user.fullName}`,
       });
 
-      // Redirect based on platform
-      // Redirect based on platform and role
       const isMobile = import.meta.env.VITE_IS_MOBILE || /Android|iPhone/i.test(navigator.userAgent);
 
       if (isMobile) {
-        // Send everyone to the main mobile dashboard for access to all modules
         setLocation("/mobile/dashboard");
       } else {
-        // Role-based redirection for desktop
         if (user.role === "user") {
           setLocation("/portal");
         } else {
@@ -66,17 +72,19 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-screen w-full flex-col md:flex-row">
       {/* Left Panel - Branding */}
-      <div className="hidden md:flex w-1/2 bg-black flex-col justify-between p-12 text-white relative overflow-hidden">
-        <div className="absolute inset-0 bg-[url('https://upload.wikimedia.org/wikipedia/commons/thumb/e/e3/Port_Moresby_Skyline.jpg/1200px-Port_Moresby_Skyline.jpg')] bg-cover bg-center opacity-30 mix-blend-overlay"></div>
+      <div className="hidden md:flex w-1/2 bg-[#0F0F0F] flex-col justify-between p-12 text-white relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-slate-900 to-yellow-950/40 opacity-80"></div>
+        <div className="absolute inset-0 bg-[radial-gradient(#eab308_1px,transparent_1px)] [background-size:24px_24px] opacity-15"></div>
+
         <div className="relative z-10">
-          <div className="h-16 w-16 bg-white rounded-full p-1 mb-8">
-            <img src={logo} alt="NCDC" className="h-full w-full object-contain" />
+          <div className="h-16 w-16 bg-yellow-500/10 border border-yellow-500/40 rounded-2xl flex items-center justify-center p-2 mb-8 text-yellow-500 shadow-md">
+            <Building2 className="h-10 w-10" />
           </div>
-          <h1 className="text-4xl font-bold tracking-tight mb-4 text-yellow-500">National Capital District Commission</h1>
-          <p className="text-xl text-gray-300 max-w-md">Compliance Directorate & Licensing Division Portal</p>
+          <h1 className="text-4xl font-bold tracking-tight mb-4 text-yellow-500">{councilName}</h1>
+          <p className="text-xl text-gray-300 max-w-md">{countryName} Local Government & Citizen Services Portal</p>
         </div>
         <div className="relative z-10 text-sm text-gray-500">
-          &copy; 2026 NCDC. Serving Port Moresby.
+          &copy; 2026 {councilName}. All rights reserved.
         </div>
       </div>
 
@@ -84,13 +92,15 @@ export default function LoginPage() {
       <div className="flex flex-1 items-center justify-center bg-white p-8">
         <div className="w-full max-w-md space-y-8">
           <div className="flex flex-col items-center text-center md:hidden">
-            <img src={logo} alt="NCDC" className="h-20 w-20 object-contain mb-4" />
-            <h2 className="text-2xl font-bold text-black">NCDC Portal</h2>
+            <div className="h-16 w-16 bg-yellow-500/10 border border-yellow-500/40 rounded-2xl flex items-center justify-center mb-3 text-yellow-600">
+              <Building2 className="h-8 w-8" />
+            </div>
+            <h2 className="text-2xl font-bold text-black">{councilName}</h2>
           </div>
 
           <div className="space-y-2 text-center md:text-left">
             <h2 className="text-3xl font-bold tracking-tight text-black">Sign In</h2>
-            <p className="text-gray-500">Access your compliance and licensing dashboard.</p>
+            <p className="text-gray-500">Access your {councilName} compliance and licensing portal.</p>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-6">
@@ -99,7 +109,7 @@ export default function LoginPage() {
               <Input
                 id="email"
                 type="email"
-                placeholder="officer@ncdc.gov.pg"
+                placeholder="officer@lcc.gov.zm"
                 value={formData.email}
                 onChange={handleChange}
                 required

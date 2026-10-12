@@ -62,7 +62,7 @@ export function Header() {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="h-auto p-0 hover:bg-transparent font-normal flex items-center gap-2">
                 <span className="font-bold text-lg tracking-tight text-left text-foreground-default">
-                  {currentOrganization?.name || "National Capital District Commission"}
+                  {currentOrganization?.name || "Lusaka City Council"}
                 </span>
                 <ChevronDown className="h-4 w-4 text-foreground-dimmer" />
               </Button>
@@ -97,7 +97,7 @@ export function Header() {
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-foreground-dimmest" />
           <Input
             type="search"
-            placeholder="Search NCDC records..."
+            placeholder={`Search ${currentOrganization?.name || "council"} records...`}
             className="w-full pl-10 md:w-[300px] bg-background-higher border-outline-dimmer text-sm rounded-md"
           />
         </div>
@@ -163,7 +163,7 @@ export function Header() {
             {user && ["admin", "manager", "officer"].includes(user.role) && (
               <>
                 <DropdownMenuItem className="text-foreground-default">Officer Profile</DropdownMenuItem>
-                <DropdownMenuItem className="text-foreground-default">NCDC Settings</DropdownMenuItem>
+                <DropdownMenuItem className="text-foreground-default">Council Settings</DropdownMenuItem>
                 <DropdownMenuSeparator className="bg-outline-dimmer" />
               </>
             )}

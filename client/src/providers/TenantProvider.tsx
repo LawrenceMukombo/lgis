@@ -81,23 +81,33 @@ interface TenantContextValue {
 }
 
 const getStoredCouncilId = () => {
-    if (typeof window === 'undefined') return '3c4d4a9f-92a7-4dd2-82fb-ceff90c57094';
+    if (typeof window === 'undefined') return 'ec9b95a7-c085-4b88-a391-e3c84d7128ce';
     const stored = localStorage.getItem('currentOrganization');
     try {
-        return stored ? JSON.parse(stored)?.councilId : '3c4d4a9f-92a7-4dd2-82fb-ceff90c57094';
+        return stored ? JSON.parse(stored)?.councilId : 'ec9b95a7-c085-4b88-a391-e3c84d7128ce';
     } catch (e) {
-        return '3c4d4a9f-92a7-4dd2-82fb-ceff90c57094';
+        return 'ec9b95a7-c085-4b88-a391-e3c84d7128ce';
+    }
+};
+
+const getStoredCouncilName = () => {
+    if (typeof window === 'undefined') return 'Lusaka City Council';
+    const stored = localStorage.getItem('currentOrganization');
+    try {
+        return stored ? JSON.parse(stored)?.name : 'Lusaka City Council';
+    } catch (e) {
+        return 'Lusaka City Council';
     }
 };
 
 const defaultConfig: TenantConfig = {
     configId: '',
     councilId: getStoredCouncilId(),
-    councilName: 'National Capital District Commission',
-    shortName: 'NCDC',
-    primaryColor: '#1e40af',
-    secondaryColor: '#7c3aed',
-    accentColor: '#f59e0b',
+    councilName: getStoredCouncilName(),
+    shortName: 'LCC',
+    primaryColor: '#0F0F0F',
+    secondaryColor: '#EAB308',
+    accentColor: '#F4C400',
     backgroundRootColor: '#EBECED',
     backgroundDefaultColor: '#FCFCFC',
     backgroundHigherColor: '#F0F1F2',
@@ -113,12 +123,12 @@ const defaultConfig: TenantConfig = {
     inputRadius: 4,
     fontFamily: 'Inter',
     locationLevels: ['Country', 'Province', 'District', 'Ward'],
-    locale: 'en-US',
-    timezone: 'Pacific/Port_Moresby',
+    locale: 'en-ZM',
+    timezone: 'Africa/Lusaka',
     dateFormat: 'DD/MM/YYYY',
     timeFormat: 'HH:mm',
     firstDayOfWeek: 'monday',
-    currency: 'PGK',
+    currency: 'ZMW',
     currencySymbol: 'K',
     currencyPosition: 'before',
     decimalSeparator: '.',

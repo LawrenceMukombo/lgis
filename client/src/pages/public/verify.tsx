@@ -5,15 +5,21 @@ import { useRoute } from "wouter";
 import { Badge } from "@/components/ui/badge";
 import { ShieldCheck, ShieldAlert, Lock } from "lucide-react";
 
+import { useOrganization } from "@/contexts/organization-context";
+import { Building2 } from "lucide-react";
+
 export default function VerificationPage() {
     const [match, params] = useRoute("/verify/:licenceNo");
     const licenceNo = params?.licenceNo;
+    const { currentOrganization } = useOrganization();
 
     const { data, isLoading, error } = useQuery<any>({
         queryKey: [`/api/v1/verify/${licenceNo}`],
         enabled: !!licenceNo,
         retry: false
     });
+
+    const councilName = data?.councilName || currentOrganization?.name || "Local Government Council";
 
     if (isLoading) {
         return (
@@ -34,11 +40,11 @@ export default function VerificationPage() {
             <Card className="w-full max-w-lg shadow-[0_20px_50px_rgba(0,0,0,0.1)] border-none rounded-3xl overflow-hidden bg-white">
                 <div className="h-3 bg-[#F4C400]" />
                 <CardHeader className="text-center pb-2 pt-10">
-                    <div className="mx-auto mb-6 transform hover:scale-105 transition-transform duration-300">
-                        <img src="/assets/ncdc_logo.png" alt="NCDC Logo" className="h-28 w-auto drop-shadow-md" />
+                    <div className="mx-auto mb-6 h-20 w-20 bg-yellow-500/10 border border-yellow-500/30 rounded-2xl flex items-center justify-center text-yellow-600 transform hover:scale-105 transition-transform duration-300">
+                        <Building2 className="h-10 w-10" />
                     </div>
                     <CardTitle className="text-3xl font-black text-[#0F0F0F] tracking-tighter uppercase">License Verification</CardTitle>
-                    <CardDescription className="text-[10px] font-black uppercase tracking-[0.2em] text-[#0F0F0F]/40">National Capital District Commission</CardDescription>
+                    <CardDescription className="text-[10px] font-black uppercase tracking-[0.2em] text-[#0F0F0F]/60">{councilName}</CardDescription>
                 </CardHeader>
 
                 <CardContent className="space-y-8 px-10 pb-12 pt-6">

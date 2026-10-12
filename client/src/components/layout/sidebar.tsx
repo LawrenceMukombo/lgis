@@ -141,21 +141,21 @@ export function Sidebar() {
         className="flex h-16 items-center gap-3 px-6 border-b-2 border-sidebar-border"
       >
         <div
-          className="h-10 w-10 overflow-hidden rounded-full p-0.5 border-2 border-accent-primary-dimmer bg-background-default"
+          className="h-10 w-10 overflow-hidden rounded-full p-0.5 border-2 border-accent-primary-dimmer bg-background-default flex items-center justify-center"
         >
-          {config?.logoUrl || '/logo.png' ? (
-            <img src={config.logoUrl || '/logo.png'} alt={config.shortName || 'NCDC'} className="h-full w-full object-contain" />
+          {config?.logoUrl ? (
+            <img src={config.logoUrl} alt={config.shortName || 'LCC'} className="h-full w-full object-contain" />
           ) : (
             <div
-              className="h-full w-full flex items-center justify-center font-bold text-accent-primary-default bg-accent-primary-dimmest"
+              className="h-full w-full flex items-center justify-center font-bold text-accent-primary-default bg-accent-primary-dimmest text-xs"
             >
-              {config?.shortName?.substring(0, 2) || 'LG'}
+              {config?.shortName?.substring(0, 3) || 'LCC'}
             </div>
           )}
         </div>
         <div className="flex flex-col">
           <span className="text-sm font-bold tracking-tight text-sidebar-foreground">
-            {config?.shortName || 'NCDC'}
+            {config?.shortName || 'LCC'}
           </span>
           <span className="text-[10px] font-medium uppercase tracking-wider text-sidebar-foreground opacity-70">
             Management Portal

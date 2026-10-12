@@ -34,9 +34,10 @@ interface OrganizationContextType {
 const OrganizationContext = createContext<OrganizationContextType | undefined>(undefined);
 
 export function OrganizationProvider({ children }: { children: React.ReactNode }) {
+  // Default to Zambia (7aa66363-752b-4b39-9b79-d413c8504e83) if not explicitly stored
   const [selectedCountryId, setSelectedCountryIdState] = useState<string | null>(() => {
-    if (typeof window === 'undefined') return null;
-    return localStorage.getItem('selectedCountryId') || null;
+    if (typeof window === 'undefined') return '7aa66363-752b-4b39-9b79-d413c8504e83';
+    return localStorage.getItem('selectedCountryId') || '7aa66363-752b-4b39-9b79-d413c8504e83';
   });
 
   const [currentOrganization, setCurrentOrganization] = useState<Council | null>(() => {
@@ -44,7 +45,12 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
     const stored = localStorage.getItem('currentOrganization');
     if (!stored) return null;
     try {
-      return JSON.parse(stored);
+      const parsed = JSON.parse(stored);
+      // If legacy NCDC is stored but user is onboarding Zambia, allow fresh pick
+      if (parsed?.name?.includes("National Capital District")) {
+        return null;
+      }
+      return parsed;
     } catch {
       return null;
     }
@@ -65,10 +71,11 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
     setSelectedCountryIdState(countryId);
     if (countryId) {
       localStorage.setItem('selectedCountryId', countryId);
-      // Auto-switch current organization to the first council in this country if not already in it
+      // Auto-switch current organization to the first/primary council in this country
       const countryCouncils = allOrganizations.filter(o => o.countryId === countryId);
       if (countryCouncils.length > 0 && currentOrganization?.countryId !== countryId) {
-        setCurrentOrganization(countryCouncils[0]);
+        const primaryCouncil = countryCouncils.find(c => c.name.includes("Lusaka") || c.name.includes("City")) || countryCouncils[0];
+        setCurrentOrganization(primaryCouncil);
       }
     } else {
       localStorage.removeItem('selectedCountryId');
@@ -81,18 +88,23 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
       if (stored) {
         try {
           const parsed = JSON.parse(stored);
-          if (parsed && parsed.councilId) {
+          if (parsed && parsed.councilId && !parsed.name?.includes("National Capital District")) {
             const found = allOrganizations.find(o => o.councilId === parsed.councilId);
-            setCurrentOrganization(found || allOrganizations[0]);
-          } else {
-            setCurrentOrganization(allOrganizations[0]);
+            if (found) {
+              setCurrentOrganization(found);
+              return;
+            }
           }
         } catch {
-          setCurrentOrganization(allOrganizations[0]);
+          // fallback
         }
-      } else {
-        setCurrentOrganization(allOrganizations[0]);
       }
+
+      // Default prioritize Lusaka City Council or first Zambian council
+      const defaultOrg = allOrganizations.find(o => o.name === 'Lusaka City Council')
+        || allOrganizations.find(o => o.countryCode === 'ZM')
+        || allOrganizations[0];
+      setCurrentOrganization(defaultOrg);
     }
   }, [allOrganizations, currentOrganization]);
 
